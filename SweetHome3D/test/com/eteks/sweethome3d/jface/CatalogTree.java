@@ -33,19 +33,21 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
 import com.eteks.sweethome3d.model.Catalog;
-import com.eteks.sweethome3d.model.Category;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
+import com.eteks.sweethome3d.model.Category;
 
 /**
  * Furniture catalog tree JFace implementation.
  * @author Emmanuel Puybaret
  */
-public class CatalogTree extends TreeViewer { 
+public class CatalogTree {
+  private TreeViewer treeViewer; 
+  
   public CatalogTree(Composite parent, Catalog catalog) {
-    super(parent);
-    setContentProvider(new CatalogTreeContentProvider(catalog));
-    setLabelProvider(new CatalogLabelProvider());
-    setInput(catalog);
+    this.treeViewer = new TreeViewer(parent);
+    this.treeViewer.setContentProvider(new CatalogTreeContentProvider(catalog));
+    this.treeViewer.setLabelProvider(new CatalogLabelProvider());
+    this.treeViewer.setInput(catalog);
   }
 
   /**
@@ -54,7 +56,7 @@ public class CatalogTree extends TreeViewer {
   private class CatalogLabelProvider extends LabelProvider {
     // Label images cache (we're obliged to keep track of all the images
     // to dispose them when tree will be disposed)
-    Map<CatalogPieceOfFurniture, Image> imagesCache = 
+    private Map<CatalogPieceOfFurniture, Image> imagesCache = 
       new HashMap<CatalogPieceOfFurniture, Image>();
     
     @Override
@@ -69,7 +71,7 @@ public class CatalogTree extends TreeViewer {
             Image image = new Image(Display.getCurrent(), iconStream);
             iconStream.close();
             // Scale the read icon  
-            int rowHeight = getTree().getItemHeight();
+            int rowHeight = treeViewer.getTree().getItemHeight();
             int imageWidth = image.getBounds().width * rowHeight 
                              / image.getBounds().height;
             scaledImage = new Image (Display.getCurrent(), 

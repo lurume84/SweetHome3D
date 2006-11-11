@@ -57,7 +57,7 @@ public class IconManager {
         getClass().getResource("resources/error.png"));
     this.waitIconContent = new URLContent (
         getClass().getResource("resources/wait.png"));
-    this.iconsLoader = Executors.newCachedThreadPool();
+    this.iconsLoader = Executors.newFixedThreadPool(5);
     this.icons = new HashMap<ContentHeightKey,Icon>();
   }
   

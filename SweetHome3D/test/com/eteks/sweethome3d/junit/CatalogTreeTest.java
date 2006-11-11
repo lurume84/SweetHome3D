@@ -36,8 +36,8 @@ import junit.framework.TestCase;
 
 import com.eteks.sweethome3d.io.DefaultCatalog;
 import com.eteks.sweethome3d.model.Catalog;
-import com.eteks.sweethome3d.model.Category;
 import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
+import com.eteks.sweethome3d.model.Category;
 import com.eteks.sweethome3d.swing.CatalogTree;
 
 /**
@@ -80,22 +80,11 @@ public class CatalogTreeTest extends TestCase {
     assertFalse("Root is visible", tree.isRootVisible());
     assertTrue("Handles not showed", tree.getShowsRootHandles());
     
-    // 4. Select first piece in tree
-    tree.expandRow(0); 
-    tree.setSelectionRow(1); 
-    List<CatalogPieceOfFurniture> selectedFurniture = 
-      ((CatalogTree)tree).getSelectedFurniture();
-    
-    // Check the selected piece in catalog is the selected piece in tree 
-    assertEquals("No piece of furniture selected", 
-        1, selectedFurniture.size());
-    assertEquals("First piece not selected", 
-      firstPiece, selectedFurniture.get(0)); 
+    // 4. Check alphabetical order of categories and furniture in tree
+    assertTreeIsSorted(tree);
   }
   
-  public void testCatalogTreeNodesOrder() {
-    // Create a tree from default catalog
-    JTree tree = new CatalogTree(new DefaultCatalog());   
+  public void assertTreeIsSorted(JTree tree) {
     TreeModel model = tree.getModel();
     Object    root  = model.getRoot();
     Collator  comparator = Collator.getInstance();
@@ -112,9 +101,9 @@ public class CatalogTreeTest extends TestCase {
       // For each piece of furniture of a category
       for (int j = 0, m = model.getChildCount(rootChild) - 1; 
            j < m; j++) {
-        Object child = model.getChild(rootChild, i);
+        Object child = model.getChild(rootChild, j);
         if (j < m - 1) {
-          Object nextChild = model.getChild(rootChild, i + 1);
+          Object nextChild = model.getChild(rootChild, j + 1);
           // Check alphatical order of furniture nodes in tree 
           assertTrue("Furniture not sorted", comparator.compare(
               getNodeText(tree, child), 

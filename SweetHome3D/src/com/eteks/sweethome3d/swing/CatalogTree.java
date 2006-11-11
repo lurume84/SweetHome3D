@@ -20,9 +20,7 @@
 package com.eteks.sweethome3d.swing;
 
 import java.awt.Component;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.JLabel;
@@ -33,9 +31,9 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import com.eteks.sweethome3d.model.Catalog;
+import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 import com.eteks.sweethome3d.model.Category;
 import com.eteks.sweethome3d.model.Content;
-import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 
 /**
  * A tree displaying furniture catalog by category.
@@ -49,22 +47,6 @@ public class CatalogTree extends JTree {
     setCellRenderer(new CatalogCellRenderer());
   }
 
-  /**
-   * Returns the furniture currently selected in the tree.
-   * @return a list of furniture. If no furniture is selected, the list is empty.
-   */
-  public List<CatalogPieceOfFurniture> getSelectedFurniture() {
-    TreePath [] selectionPaths  = getSelectionPaths();
-    List<CatalogPieceOfFurniture> selectedFurniture = new ArrayList<CatalogPieceOfFurniture>();
-    for (TreePath path : selectionPaths) {
-      // Add to selectedFurniture all the nodes that matches a piece of furniture
-      if (path.getPathCount() == 3) {
-        selectedFurniture.add((CatalogPieceOfFurniture)path.getLastPathComponent());
-      }        
-    }
-    return selectedFurniture;
-  }  
-  
   /**
    * Cell renderer for this catalog tree.
    */
