@@ -501,7 +501,10 @@ public class PlanViewer extends Viewer implements PlanView {
       Rectangle pixelBounds = getShapePixelBounds(
           new Rectangle2D.Float(x, y, 1 / this.scale, 1 / this.scale));
       ScrolledComposite parent = (ScrolledComposite)this.control.getParent();
-      parent.setOrigin(pixelBounds.x, pixelBounds.y);
+      Point origin = parent.getOrigin(); 
+      if (origin.x > pixelBounds.x || origin.y > pixelBounds.y) {
+        parent.setOrigin(pixelBounds.x, pixelBounds.y);
+      }
     }
   }
 
