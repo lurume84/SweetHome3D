@@ -19,8 +19,6 @@
  */
 package com.eteks.sweethome3d.model;
 
-import com.eteks.sweethome3d.io.DefaultCatalog;
-
 /**
  * User preferences.
  * @author Emmanuel Puybaret
@@ -51,7 +49,7 @@ public abstract class UserPreferences {
     return this.catalog;
   }
 
-  protected void setCatalog(DefaultCatalog catalog) {
+  protected void setCatalog(Catalog catalog) {
     this.catalog = catalog;
   }
 
