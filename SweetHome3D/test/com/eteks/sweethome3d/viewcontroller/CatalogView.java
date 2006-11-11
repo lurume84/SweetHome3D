@@ -1,5 +1,5 @@
 /*
- * Controller.java 26 mai 2006
+ * CatalogView.java 29 mai 2006
  *
  * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
@@ -17,18 +17,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package com.eteks.sweethome3d.swing;
-
-import javax.swing.JComponent;
+package com.eteks.sweethome3d.viewcontroller;
 
 /**
- * A controller associated with a view.
+ * A MVC view for catalog tree.
  * @author Emmanuel Puybaret
  */
-public interface Controller {
-  /**
-   * Returns the view associated with this controller.
-   */
-  public abstract JComponent getView();
-
+public interface CatalogView extends View {
+  
 }

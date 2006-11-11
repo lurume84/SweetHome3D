@@ -59,16 +59,28 @@ public class FurnitureTable extends JTable {
    * @param preferences the preferences of the application
    */
   public FurnitureTable(Home home, UserPreferences preferences) {
+    this(home, preferences, null);
+  }
+
+  /**
+   * Creates a table controlled by <code>controller</code>
+   * that displays furniture of <code>home</code>.
+   */
+  public FurnitureTable(Home home, UserPreferences preferences, 
+                       FurnitureController controller) {
     String [] columnNames = getColumnNames();
     setModel(new FurnitureTableModel(home, columnNames));
     setColumnRenderers(preferences);
-    addSelectionListeners(home);
+    if (controller != null) {
+      addSelectionListeners(home, controller);
+    }
   }
   
   /**
    * Adds selection listeners to this table.
    */
-  private void addSelectionListeners(final Home home) {   
+  private void addSelectionListeners(final Home home,
+                                     final FurnitureController controller) {   
     final SelectionListener homeSelectionListener  = 
       new SelectionListener() {
         public void selectionChanged(SelectionEvent ev) {
@@ -98,8 +110,8 @@ public class FurnitureTable extends JTable {
             for (int index : selectedRows) {
               selectedFurniture.add(furniture.get(index));
             }
-            // Set the new selection in home
-            home.setSelectedItems(selectedFurniture);
+            // Set the new selection in home with controller
+            controller.setSelectedFurniture(selectedFurniture);
             home.addSelectionListener(homeSelectionListener);
           }
         }
@@ -175,7 +187,7 @@ public class FurnitureTable extends JTable {
          table, piece.getName(), isSelected, hasFocus, row, column); 
        Content iconContent = piece.getIcon(); 
         label.setIcon(IconManager.getInstance().getIcon(
-            iconContent, getRowHeight(), FurnitureTable.this)); 
+            iconContent, getRowHeight(), table)); 
         return label;
       }
     };
@@ -222,7 +234,7 @@ public class FurnitureTable extends JTable {
       } 
     };
   }
-
+ 
   /**
    * Model used by this table
    */

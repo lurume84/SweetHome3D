@@ -1,5 +1,5 @@
 /*
- * ViewFactory.java 29 mai 2006
+ * CatalogController.java 15 mai 2006
  *
  * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
@@ -17,29 +17,43 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package com.eteks.sweethome3d.viewcontroller;
+package com.eteks.sweethome3d.swing;
+
+import java.util.List;
+
+import javax.swing.JComponent;
 
 import com.eteks.sweethome3d.model.Catalog;
-import com.eteks.sweethome3d.model.Home;
-import com.eteks.sweethome3d.model.UserPreferences;
+import com.eteks.sweethome3d.model.CatalogPieceOfFurniture;
 
 /**
- * A factory for view objects.
+ * A MVC controller for the furniture catalog.
  * @author Emmanuel Puybaret
  */
-public interface ViewFactory {
-  /**
-   * Creates a home view.
-   */
-  HomeView createHomeView(Home home, UserPreferences preferences, HomeController controller);
+public class CatalogController {
+  private Catalog    catalog;
+  private JComponent catalogView;
 
   /**
-   * Creates a catalog view.
+   * Creates a controller of the furniture catalog view.
+   * @param catalog the furniture catalog of the application
    */
-  CatalogView createCatalogView(Catalog catalog, CatalogController controller);
-  
-  /** 
-   * Creates a furniture view. 
+  public CatalogController(Catalog catalog) {
+    this.catalog = catalog;
+    this.catalogView = new CatalogTree(catalog, this);
+  }
+
+  /**
+   * Returns the view associated with this controller.
    */
-  FurnitureView createFurnitureView(Home home, UserPreferences preferences, FurnitureController controller);
+  public JComponent getView() {
+    return this.catalogView;
+  }
+
+  /**
+   * Updates the selected furniture in catalog.
+   */
+  public void setSelectedFurniture(List<CatalogPieceOfFurniture> selectedFurniture) {
+    this.catalog.setSelectedFurniture(selectedFurniture);
+  }
 }

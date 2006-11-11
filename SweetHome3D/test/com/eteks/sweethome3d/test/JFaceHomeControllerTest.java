@@ -23,22 +23,20 @@ import org.eclipse.jface.window.ApplicationWindow;
 import org.eclipse.swt.widgets.Display;
 
 import com.eteks.sweethome3d.io.DefaultUserPreferences;
-import com.eteks.sweethome3d.jface.JFaceViewFactory;
+import com.eteks.sweethome3d.jface.HomeApplicationWindow;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.UserPreferences;
-import com.eteks.sweethome3d.viewcontroller.HomeController;
 
 
 /**
- * Tests furniture furniture table JFace implementation.
+ * Tests home controller JFace implementation.
  * @author Emmanuel Puybaret
  */
 public class JFaceHomeControllerTest {
   public static void main(String [] args) {
     UserPreferences preferences = new DefaultUserPreferences();
     Home home = new Home();
-    HomeController controller = new HomeController(new JFaceViewFactory(), home, preferences);
-    ApplicationWindow window = (ApplicationWindow)controller.getView();
+    ApplicationWindow window = new HomeApplicationWindow(home, preferences);
     window.setBlockOnOpen(true);
     window.open();
     Display.getCurrent().dispose(); 

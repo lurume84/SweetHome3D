@@ -1,5 +1,5 @@
 /*
- * WallListener.java 3 juin 2006
+ * FurnitureView.java 29 mai 2006
  *
  * Copyright (c) 2006 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
@@ -17,17 +17,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-package com.eteks.sweethome3d.model;
-
-import java.util.EventListener;
+package com.eteks.sweethome3d.viewcontroller;
 
 /**
- * Listener implemented to receive notifications of walls changes in {@link Home}.
+ * A MVC view for furniture table.
  * @author Emmanuel Puybaret
  */
-public interface WallListener extends EventListener {
-  /**
-   * Invoked when a wall is added, deleted or updated in home.
-   */
-  void wallChanged(WallEvent ev);
+public interface FurnitureView extends View {
+  
 }
