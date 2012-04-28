@@ -1,0 +1,6 @@
+/SweetHome3DJS/other/downloads/mrdoob-three.js-r71-5-gd6384d2.zip filter=lfs diff=lfs merge=lfs -text
+/SweetHome3DJS/other/test/homes/bigSize.sh3d filter=lfs diff=lfs merge=lfs -text
+/SweetHome3DJS/other/test/homes/test2.sh3d filter=lfs diff=lfs merge=lfs -text
+/SweetHome3DJS/other/test/models/LaModePourTous.zip filter=lfs diff=lfs merge=lfs -text
+/SweetHome3DJS/other/test/models/SweetHome3DExample7.zip filter=lfs diff=lfs merge=lfs -text
+/SweetHome3DJS/other/versions/SweetHome3DJS-0.9-src.zip filter=lfs diff=lfs merge=lfs -text
