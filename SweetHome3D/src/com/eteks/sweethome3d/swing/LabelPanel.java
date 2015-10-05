@@ -1,7 +1,7 @@
 /*
  * LabelPanel.java 29 nov. 2008
  *
- * Sweet Home 3D, Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2008 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ResourceBundle;
 
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -49,7 +50,7 @@ public class LabelPanel extends JPanel implements DialogView {
   private final LabelController controller;
   private JLabel                textLabel;
   private JTextField            textTextField;
-  private String                dialogTitle;
+  private ResourceBundle        resource;
 
   /**
    * Creates a panel that displays label data.
@@ -63,22 +64,20 @@ public class LabelPanel extends JPanel implements DialogView {
     super(new GridBagLayout());
     this.labelModification = modification;
     this.controller = controller;
-    createComponents(modification, preferences, controller);
-    setMnemonics(preferences);
+    this.resource = ResourceBundle.getBundle(LabelPanel.class.getName());
+    createComponents(controller);
+    setMnemonics();
     layoutComponents(controller);
   }
 
   /**
    * Creates and initializes components.
    */
-  private void createComponents(boolean modification, 
-                                UserPreferences preferences, 
-                                final LabelController controller) {
+  private void createComponents(final LabelController controller) {
     // Create text label and its text field bound to NAME controller property
-    this.textLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-        LabelPanel.class, "textLabel.text"));
-    this.textTextField = new AutoCompleteTextField(controller.getText(), 20, preferences.getAutoCompletionStrings("LabelText"));
-    if (!OperatingSystem.isMacOSXLeopardOrSuperior()) {
+    this.textLabel = new JLabel(this.resource.getString("textLabel.text"));
+    this.textTextField = new JTextField(controller.getText(), 20);
+    if (!OperatingSystem.isMacOSX()) {
       SwingTools.addAutoSelectionOnFocusGain(this.textTextField);
     }
     final PropertyChangeListener textChangeListener = new PropertyChangeListener() {
@@ -107,20 +106,15 @@ public class LabelPanel extends JPanel implements DialogView {
           changedUpdate(ev);
         }
       });
-
-    this.dialogTitle = preferences.getLocalizedString(LabelPanel.class, 
-        modification 
-            ? "labelModification.title"
-            : "labelCreation.title");
   }
 
   /**
    * Sets components mnemonics and label / component associations.
    */
-  private void setMnemonics(UserPreferences preferences) {
+  private void setMnemonics() {
     if (!OperatingSystem.isMacOSX()) {
-      this.textLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-          LabelPanel.class, "textLabel.mnemonic")).getKeyCode());
+      this.textLabel.setDisplayedMnemonic(
+          KeyStroke.getKeyStroke(this.resource.getString("textLabel.mnemonic")).getKeyCode());
       this.textLabel.setLabelFor(this.textTextField);
     }
   }
@@ -144,8 +138,11 @@ public class LabelPanel extends JPanel implements DialogView {
    * Displays this panel in a modal dialog box. 
    */
   public void displayView(View parentView) {
+    String dialogTitle = resource.getString(this.labelModification 
+        ? "labelModification.title"
+        : "labelCreation.title");
     if (SwingTools.showConfirmDialog((JComponent)parentView, 
-            this, this.dialogTitle, this.textTextField) == JOptionPane.OK_OPTION
+            this, dialogTitle, this.textTextField) == JOptionPane.OK_OPTION
         && this.controller != null) {
       if (this.labelModification) {
         this.controller.modifyLabels();
