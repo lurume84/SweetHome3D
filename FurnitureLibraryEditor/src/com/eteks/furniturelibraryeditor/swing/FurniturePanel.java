@@ -1,7 +1,7 @@
 /*
  * FurniturePanel.java 
  *
- * Furniture Library Editor, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
  */
 package com.eteks.furniturelibraryeditor.swing;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Cursor;
@@ -65,10 +64,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.vecmath.Matrix3f;
-
-import org.apache.batik.parser.AWTPathProducer;
-import org.apache.batik.parser.ParseException;
-import org.apache.batik.parser.PathParser;
 
 import com.eteks.furniturelibraryeditor.viewcontroller.FurnitureController;
 import com.eteks.sweethome3d.j3d.ModelManager;
@@ -119,13 +114,9 @@ public class FurniturePanel extends JPanel implements DialogView {
   private JSpinner                  elevationSpinner;
   private NullableCheckBox          movableCheckBox;
   private NullableCheckBox          doorOrWindowCheckBox;
-  private NullableCheckBox          staircaseCheckBox;
-  private JLabel                    staircaseCutOutShapeLabel;
-  private JTextField                staircaseCutOutShapeTextField;
   private NullableCheckBox          backFaceShownCheckBox;
   private NullableCheckBox          resizableCheckBox;
   private NullableCheckBox          deformableCheckBox;
-  private NullableCheckBox          texturableCheckBox;
   private JLabel                    creatorLabel;
   private JTextField                creatorTextField;
   private JLabel                    priceLabel;
@@ -158,696 +149,560 @@ public class FurniturePanel extends JPanel implements DialogView {
     // Get unit name matching current unit 
     String unitName = preferences.getLengthUnit().getName();
     
-    if (this.controller.isPropertyEditable(FurnitureController.Property.ID)) {
-      // Create id label and its text field bound to ID controller property
-      this.idLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "idLabel.text"));
-      this.idTextField = new JTextField(controller.getId(), 10);
-      if (!OperatingSystem.isMacOSX()) {
-        SwingTools.addAutoSelectionOnFocusGain(this.idTextField);
-      }
-      final PropertyChangeListener idChangeListener = new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            idTextField.setText(controller.getId());
-          }
-        };
-      controller.addPropertyChangeListener(FurnitureController.Property.ID, idChangeListener);
-      this.idTextField.getDocument().addDocumentListener(new DocumentListener() {
-          public void changedUpdate(DocumentEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.ID, idChangeListener);
-            String id = idTextField.getText(); 
-            if (id == null || id.trim().length() == 0) {
-              controller.setId(null);
-            } else {
-              controller.setId(id);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.ID, idChangeListener);
-          }
-    
-          public void insertUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-    
-          public void removeUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-        });
+    // Create id label and its text field bound to ID controller property
+    this.idLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "idLabel.text"));
+    this.idTextField = new JTextField(controller.getId(), 10);
+    if (!OperatingSystem.isMacOSX()) {
+      SwingTools.addAutoSelectionOnFocusGain(this.idTextField);
     }
+    final PropertyChangeListener idChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          idTextField.setText(controller.getId());
+        }
+      };
+    controller.addPropertyChangeListener(FurnitureController.Property.ID, idChangeListener);
+    this.idTextField.getDocument().addDocumentListener(new DocumentListener() {
+        public void changedUpdate(DocumentEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.ID, idChangeListener);
+          String id = idTextField.getText(); 
+          if (id == null || id.trim().length() == 0) {
+            controller.setId(null);
+          } else {
+            controller.setId(id);
+          }
+          controller.addPropertyChangeListener(FurnitureController.Property.ID, idChangeListener);
+        }
+  
+        public void insertUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+  
+        public void removeUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+      });
         
-    if (this.controller.isPropertyEditable(FurnitureController.Property.NAME)) {
-      // Create name label and its text field bound to NAME controller property
-      this.nameLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "nameLabel.text"));
-      this.nameTextField = new JTextField(controller.getName(), 10);
-      if (!OperatingSystem.isMacOSX()) {
-        SwingTools.addAutoSelectionOnFocusGain(this.nameTextField);
-      }
-      final PropertyChangeListener nameChangeListener = new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            nameTextField.setText(controller.getName());
-          }
-        };
-      controller.addPropertyChangeListener(FurnitureController.Property.NAME, nameChangeListener);
-      this.nameTextField.getDocument().addDocumentListener(new DocumentListener() {
-          public void changedUpdate(DocumentEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.NAME, nameChangeListener);
-            String name = nameTextField.getText(); 
-            if (name == null || name.trim().length() == 0) {
-              controller.setName(null);
-            } else {
-              controller.setName(name);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.NAME, nameChangeListener);
-          }
-    
-          public void insertUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-    
-          public void removeUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-        });
+    // Create name label and its text field bound to NAME controller property
+    this.nameLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "nameLabel.text"));
+    this.nameTextField = new JTextField(controller.getName(), 10);
+    if (!OperatingSystem.isMacOSX()) {
+      SwingTools.addAutoSelectionOnFocusGain(this.nameTextField);
     }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.DESCRIPTION)) {
-      // Create description label and its text field bound to DESCRIPTION controller property
-      this.descriptionLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "descriptionLabel.text"));
-      this.descriptionTextField = new JTextField(controller.getDescription(), 10);
-      if (!OperatingSystem.isMacOSX()) {
-        SwingTools.addAutoSelectionOnFocusGain(this.descriptionTextField);
-      }
-      final PropertyChangeListener descriptionChangeListener = new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            descriptionTextField.setText(controller.getDescription());
+    final PropertyChangeListener nameChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          nameTextField.setText(controller.getName());
+        }
+      };
+    controller.addPropertyChangeListener(FurnitureController.Property.NAME, nameChangeListener);
+    this.nameTextField.getDocument().addDocumentListener(new DocumentListener() {
+        public void changedUpdate(DocumentEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.NAME, nameChangeListener);
+          String name = nameTextField.getText(); 
+          if (name == null || name.trim().length() == 0) {
+            controller.setName(null);
+          } else {
+            controller.setName(name);
           }
-        };
-      controller.addPropertyChangeListener(FurnitureController.Property.DESCRIPTION, descriptionChangeListener);
-      this.descriptionTextField.getDocument().addDocumentListener(new DocumentListener() {
-          public void changedUpdate(DocumentEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.DESCRIPTION, descriptionChangeListener);
-            String description = descriptionTextField.getText(); 
-            if (description == null || description.trim().length() == 0) {
-              controller.setDescription(null);
-            } else {
-              controller.setDescription(description);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.DESCRIPTION, descriptionChangeListener);
-          }
-    
-          public void insertUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-    
-          public void removeUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-        });
+          controller.addPropertyChangeListener(FurnitureController.Property.NAME, nameChangeListener);
+        }
+  
+        public void insertUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+  
+        public void removeUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+      });
+        
+    // Create description label and its text field bound to DESCRIPTION controller property
+    this.descriptionLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "descriptionLabel.text"));
+    this.descriptionTextField = new JTextField(controller.getDescription(), 10);
+    if (!OperatingSystem.isMacOSX()) {
+      SwingTools.addAutoSelectionOnFocusGain(this.descriptionTextField);
     }
+    final PropertyChangeListener descriptionChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          descriptionTextField.setText(controller.getDescription());
+        }
+      };
+    controller.addPropertyChangeListener(FurnitureController.Property.DESCRIPTION, descriptionChangeListener);
+    this.descriptionTextField.getDocument().addDocumentListener(new DocumentListener() {
+        public void changedUpdate(DocumentEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.DESCRIPTION, descriptionChangeListener);
+          String description = descriptionTextField.getText(); 
+          if (description == null || description.trim().length() == 0) {
+            controller.setDescription(null);
+          } else {
+            controller.setDescription(description);
+          }
+          controller.addPropertyChangeListener(FurnitureController.Property.DESCRIPTION, descriptionChangeListener);
+        }
+  
+        public void insertUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+  
+        public void removeUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+      });
 
-    if (this.controller.isPropertyEditable(FurnitureController.Property.CATEGORY)) {
-      this.categoryLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "categoryLabel.text")); 
-      final List<FurnitureCategory> categories = controller.getAvailableCategories();
-      List<FurnitureCategory> categoriesList = new ArrayList<FurnitureCategory>(categories);
-      final boolean nullableComboBox = controller.getCategory() == null;
-      if (nullableComboBox) {
-        categoriesList.add(0, null);
-      }
-      this.categoryComboBox = new JComboBox(categoriesList.toArray());
-      this.categoryComboBox.setEditable(true); 
-      final ComboBoxEditor defaultEditor = this.categoryComboBox.getEditor();
-      // Change editor to edit category name
-      this.categoryComboBox.setEditor(new ComboBoxEditor() {
-          public Object getItem() {
-            String name = (String)defaultEditor.getItem();
-            name = name.trim();
-            // If category is empty, replace it by the last selected item
-            if (name.length() == 0) {
-              setItem(nullableComboBox ? null : categoryComboBox.getSelectedItem());
-            } 
-            FurnitureCategory category = new FurnitureCategory(name);
-            // Search an existing category
-            int categoryIndex = Collections.binarySearch(categories, category);
-            if (categoryIndex >= 0) {
-              return categories.get(categoryIndex);
-            }
-            // If no existing category was found, return a new one          
-            return category;
-          }
-        
-          public void setItem(Object value) {
-            if (value != null) {
-              FurnitureCategory category = (FurnitureCategory)value;
-              defaultEditor.setItem(category.getName());
-            }
-          }
-  
-          public void addActionListener(ActionListener l) {
-            defaultEditor.addActionListener(l);
-          }
-  
-          public Component getEditorComponent() {
-            return defaultEditor.getEditorComponent();
-          }
-  
-          public void removeActionListener(ActionListener l) {
-            defaultEditor.removeActionListener(l);
-          }
-  
-          public void selectAll() {
-            defaultEditor.selectAll();
-          }
-        });
-      this.categoryComboBox.setRenderer(new DefaultListCellRenderer() {
-          public Component getListCellRendererComponent(JList list, Object value, int index, 
-                                                        boolean isSelected, boolean cellHasFocus) {
-            if (value == null) {
-              value = " ";
-            } else {
-             value = ((FurnitureCategory)value).getName();
-            }
-            return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-          }
-        });
-      this.categoryComboBox.addItemListener(new ItemListener() {
-          public void itemStateChanged(ItemEvent ev) {
-            controller.setCategory((FurnitureCategory)ev.getItem());
-          }
-        });
-      controller.addPropertyChangeListener(FurnitureController.Property.CATEGORY,
-          new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent ev) {
-              // If category changes update category combo box
-              FurnitureCategory category = controller.getCategory();
-              if (category != null) {
-                categoryComboBox.setSelectedItem(category);
-              }
-            }
-          });
-      if (this.categoryComboBox.getItemCount() > 0) {
-        this.categoryComboBox.setSelectedItem(controller.getCategory());
-      }
-      this.categoryComboBox.setMaximumRowCount(15);
+    this.categoryLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "categoryLabel.text")); 
+    final List<FurnitureCategory> categories = controller.getAvailableCategories();
+    List<FurnitureCategory> categoriesList = new ArrayList<FurnitureCategory>(categories);
+    final boolean nullableComboBox = controller.getCategory() == null;
+    if (nullableComboBox) {
+      categoriesList.add(0, null);
     }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.PRICE)) {
-      // Create price label and its spinner bound to PRICE controller property
-      this.priceLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "priceLabel.text"));
-      final NullableSpinner.NullableSpinnerNumberModel priceSpinnerModel = 
-          new NullableSpinner.NullableSpinnerNumberModel(1, 0.00999f, 1000000f, 1f);
-      this.priceSpinner = new AutoCommitSpinner(priceSpinnerModel);
-      priceSpinnerModel.setNullable(controller.getPrice() == null);
-      priceSpinnerModel.setValue(controller.getPrice());
-      final PropertyChangeListener priceChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          priceSpinnerModel.setNullable(ev.getNewValue() == null);
-          priceSpinnerModel.setValue((Float)ev.getNewValue());
+    this.categoryComboBox = new JComboBox(categoriesList.toArray());
+    this.categoryComboBox.setEditable(true); 
+    final ComboBoxEditor defaultEditor = this.categoryComboBox.getEditor();
+    // Change editor to edit category name
+    this.categoryComboBox.setEditor(new ComboBoxEditor() {
+        public Object getItem() {
+          String name = (String)defaultEditor.getItem();
+          name = name.trim();
+          // If category is empty, replace it by the last selected item
+          if (name.length() == 0) {
+            setItem(nullableComboBox ? null : categoryComboBox.getSelectedItem());
+          } 
+          FurnitureCategory category = new FurnitureCategory(name);
+          // Search an existing category
+          int categoryIndex = Collections.binarySearch(categories, category);
+          if (categoryIndex >= 0) {
+            return categories.get(categoryIndex);
+          }
+          // If no existing category was found, return a new one          
+          return category;
         }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.PRICE, priceChangeListener);
-      priceSpinnerModel.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.PRICE, priceChangeListener);
-            Object value = priceSpinnerModel.getValue();
-            controller.setPrice(value != null 
-                ? new BigDecimal((Float)value).setScale(2, BigDecimal.ROUND_HALF_UP)
-                : (BigDecimal)value);
-            controller.addPropertyChangeListener(FurnitureController.Property.PRICE, priceChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE)) {
-      // Create VAT % label and its spinner bound to VALUE_ADDED_TAX_PERCENTAGE controller property
-      this.valueAddedTaxPercentageLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "valueAddedTaxPercentageLabel.text"));
-      final NullableSpinner.NullableSpinnerNumberModel valueAddedTaxPercentageSpinnerModel = 
-          new NullableSpinner.NullableSpinnerNumberModel(0, 0, 100f, 0.1f);
-      this.valueAddedTaxPercentageSpinner = new AutoCommitSpinner(valueAddedTaxPercentageSpinnerModel);
-      valueAddedTaxPercentageSpinnerModel.setNullable(controller.getValueAddedTaxPercentage() == null);
-      valueAddedTaxPercentageSpinnerModel.setValue(controller.getValueAddedTaxPercentage() == null
-          ? null
-          : controller.getValueAddedTaxPercentage().floatValue() * 100);
-      final PropertyChangeListener valueAddedTaxPercentageChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          valueAddedTaxPercentageSpinnerModel.setNullable(ev.getNewValue() == null);
-          valueAddedTaxPercentageSpinnerModel.setValue(ev.getNewValue() == null
-              ? null
-              : ((Float)ev.getNewValue()) * 100);
-        }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE, valueAddedTaxPercentageChangeListener);
-      valueAddedTaxPercentageSpinnerModel.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE, valueAddedTaxPercentageChangeListener);
-            Object value = valueAddedTaxPercentageSpinnerModel.getValue();
-            controller.setValueAddedTaxPercentage(value != null 
-                ? new BigDecimal((Float)value / 100).setScale(3, BigDecimal.ROUND_HALF_UP)
-                : (BigDecimal)value);
-            controller.addPropertyChangeListener(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE, valueAddedTaxPercentageChangeListener);
-          }
-        });
-    }
-    
-    final float minimumLength = preferences.getLengthUnit().getMinimumLength();
-    final float maximumLength = preferences.getLengthUnit().getMaximumLength();
-    if (this.controller.isPropertyEditable(FurnitureController.Property.WIDTH)) {
-      // Create width label and its spinner bound to WIDTH controller property
-      this.widthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "widthLabel.text", unitName));
-      final NullableSpinner.NullableSpinnerLengthModel widthSpinnerModel = 
-          new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
-      this.widthSpinner = new AutoCommitSpinner(widthSpinnerModel);
-      final PropertyChangeListener widthChangeListener = new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            Float width = controller.getWidth();
-            widthSpinnerModel.setNullable(width == null);
-            widthSpinnerModel.setLength(width);
-            if (width != null) {
-              widthSpinnerModel.setMinimum(Math.min(width, minimumLength));
-            }
-          }
-        };
-      widthChangeListener.propertyChange(null);
-      controller.addPropertyChangeListener(FurnitureController.Property.WIDTH, widthChangeListener);
-      widthSpinnerModel.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.WIDTH, widthChangeListener);
-            controller.setWidth(widthSpinnerModel.getLength());
-            if (!controller.isProportional()) {
-              resetIcon(false);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.WIDTH, widthChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.DEPTH)) {
-      // Create depth label and its spinner bound to DEPTH controller property
-      this.depthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "depthLabel.text", unitName));
-      final NullableSpinner.NullableSpinnerLengthModel depthSpinnerModel = 
-          new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
-      this.depthSpinner = new NullableSpinner(depthSpinnerModel);
-      final PropertyChangeListener depthChangeListener = new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            Float depth = controller.getDepth();
-            depthSpinnerModel.setNullable(depth == null);
-            depthSpinnerModel.setLength(depth);
-            if (depth != null) {
-              depthSpinnerModel.setMinimum(Math.min(depth, minimumLength));
-            }
-          }
-        };
-      depthChangeListener.propertyChange(null);
-      controller.addPropertyChangeListener(FurnitureController.Property.DEPTH, depthChangeListener);
-      depthSpinnerModel.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.DEPTH, depthChangeListener);
-            controller.setDepth(depthSpinnerModel.getLength());
-            if (!controller.isProportional()) {
-              resetIcon(false);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.DEPTH, depthChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.HEIGHT)) {
-      // Create height label and its spinner bound to HEIGHT controller property
-      this.heightLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "heightLabel.text", unitName));
-      final NullableSpinner.NullableSpinnerLengthModel heightSpinnerModel = 
-          new NullableSpinner.NullableSpinnerLengthModel(preferences, minimumLength, maximumLength);
-      this.heightSpinner = new NullableSpinner(heightSpinnerModel);
-      final PropertyChangeListener heightChangeListener = new PropertyChangeListener() {
-          public void propertyChange(PropertyChangeEvent ev) {
-            Float height = controller.getHeight();
-            heightSpinnerModel.setNullable(height == null);
-            heightSpinnerModel.setLength(height);
-            if (height != null) {
-              heightSpinnerModel.setMinimum(Math.min(height, minimumLength));
-            }
-          }
-        };
-      heightChangeListener.propertyChange(null);
-      controller.addPropertyChangeListener(FurnitureController.Property.HEIGHT, heightChangeListener);
-      heightSpinnerModel.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.HEIGHT, heightChangeListener);
-            controller.setHeight(heightSpinnerModel.getLength());
-            if (!controller.isProportional()) {
-              resetIcon(false);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.HEIGHT, heightChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.PROPORTIONAL)) {
-      this.keepProportionsCheckBox = new JCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "keepProportionsCheckBox.text"), controller.isProportional());
-      this.keepProportionsCheckBox.addItemListener(new ItemListener() {
-          public void itemStateChanged(ItemEvent ev) {
-            controller.setProportional(keepProportionsCheckBox.isSelected());
-          }
-        });
-      controller.addPropertyChangeListener(FurnitureController.Property.PROPORTIONAL,
-          new PropertyChangeListener() {
-            public void propertyChange(PropertyChangeEvent ev) {
-              // If proportional property changes update keep proportions check box
-              keepProportionsCheckBox.setSelected(controller.isProportional());
-            }
-          });
       
-      this.enlargeTenTimesButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "ENLARGE_TEN_TIMES", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            controller.multiplySize(10);
+        public void setItem(Object value) {
+          if (value != null) {
+            FurnitureCategory category = (FurnitureCategory)value;
+            defaultEditor.setItem(category.getName());
           }
-        });
-      this.reduceTenTimesButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "REDUCE_TEN_TIMES", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            controller.multiplySize(0.1f);
-          }
-        });
-      this.enlargeInchTimesButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "ENLARGE_INCH_TIMES", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            controller.multiplySize(2.54f);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.ELEVATION)) {
-      // Create elevation label and its spinner bound to ELEVATION controller property
-      this.elevationLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "elevationLabel.text", unitName));
-      final NullableSpinner.NullableSpinnerLengthModel elevationSpinnerModel = 
-          new NullableSpinner.NullableSpinnerLengthModel(preferences, 0f, preferences.getLengthUnit().getMaximumElevation());
-      this.elevationSpinner = new NullableSpinner(elevationSpinnerModel);
-      elevationSpinnerModel.setNullable(controller.getElevation() == null);
-      elevationSpinnerModel.setLength(controller.getElevation());
-      final PropertyChangeListener elevationChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          elevationSpinnerModel.setNullable(ev.getNewValue() == null);
-          elevationSpinnerModel.setLength((Float)ev.getNewValue());
         }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.ELEVATION, 
-          elevationChangeListener);
-      elevationSpinnerModel.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.ELEVATION, 
-                elevationChangeListener);
-            controller.setElevation(elevationSpinnerModel.getLength());
-            controller.addPropertyChangeListener(FurnitureController.Property.ELEVATION, 
-                elevationChangeListener);
-          }
-        });
-    }
 
-    if (this.controller.isPropertyEditable(FurnitureController.Property.MOVABLE)) {
-      // Create movable check box bound to MOVABLE controller property
-      this.movableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "movableCheckBox.text"));
-      this.movableCheckBox.setNullable(controller.getMovable() == null);
-      this.movableCheckBox.setValue(controller.getMovable());
-      final PropertyChangeListener movableChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          movableCheckBox.setNullable(ev.getNewValue() == null);
-          movableCheckBox.setValue((Boolean)ev.getNewValue());
+        public void addActionListener(ActionListener l) {
+          defaultEditor.addActionListener(l);
         }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.MOVABLE, movableChangeListener);
-      this.movableCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.MOVABLE, movableChangeListener);
-            controller.setMovable(movableCheckBox.getValue());
-            controller.addPropertyChangeListener(FurnitureController.Property.MOVABLE, movableChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.DOOR_OR_WINDOW)) {
-      // Create doorOrWindow check box bound to DOOR_OR_WINDOW controller property
-      this.doorOrWindowCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "doorOrWindowCheckBox.text"));
-      this.doorOrWindowCheckBox.setNullable(controller.getDoorOrWindow() == null);
-      this.doorOrWindowCheckBox.setValue(controller.getDoorOrWindow());
-      final PropertyChangeListener doorOrWindowChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          doorOrWindowCheckBox.setNullable(ev.getNewValue() == null);
-          doorOrWindowCheckBox.setValue((Boolean)ev.getNewValue());
-        }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.DOOR_OR_WINDOW, doorOrWindowChangeListener);
-      this.doorOrWindowCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.DOOR_OR_WINDOW, doorOrWindowChangeListener);
-            controller.setDoorOrWindow(doorOrWindowCheckBox.getValue());
-            controller.addPropertyChangeListener(FurnitureController.Property.DOOR_OR_WINDOW, doorOrWindowChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.STAIRCASE_CUT_OUT_SHAPE)) {
-      // Create staircase check box and text field bound to STAIRCASE_CUT_OUT_SHAPE controller property
-      this.staircaseCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "staircaseCheckBox.text"));
-      this.staircaseCheckBox.setNullable(controller.getStaircase() == null);
-      this.staircaseCheckBox.setValue(controller.getStaircase());
-      final PropertyChangeListener staircaseChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          staircaseCheckBox.setNullable(ev.getNewValue() == null);
-          staircaseCheckBox.setValue((Boolean)ev.getNewValue());
-        }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.STAIRCASE, staircaseChangeListener);
-      this.staircaseCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.STAIRCASE, staircaseChangeListener);
-            Boolean value = staircaseCheckBox.getValue();
-            staircaseCutOutShapeLabel.setEnabled(!Boolean.FALSE.equals(value));
-            staircaseCutOutShapeTextField.setEnabled(!Boolean.FALSE.equals(value));
-            controller.setStaircase(value);
-            controller.addPropertyChangeListener(FurnitureController.Property.STAIRCASE, staircaseChangeListener);
-          }
-        });
 
-      this.staircaseCutOutShapeLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "staircaseCutOutShapeLabel.text"));
-      staircaseCutOutShapeLabel.setEnabled(!Boolean.FALSE.equals(controller.getStaircase()));
-      this.staircaseCutOutShapeTextField = new JTextField(controller.getStaircaseCutOutShape(), 20);
-      staircaseCutOutShapeTextField.setEnabled(!Boolean.FALSE.equals(controller.getStaircase()));
-      final PropertyChangeListener staircaseCutOutShapeChangeListener = new PropertyChangeListener() {
+        public Component getEditorComponent() {
+          return defaultEditor.getEditorComponent();
+        }
+
+        public void removeActionListener(ActionListener l) {
+          defaultEditor.removeActionListener(l);
+        }
+
+        public void selectAll() {
+          defaultEditor.selectAll();
+        }
+      });
+    this.categoryComboBox.setRenderer(new DefaultListCellRenderer() {
+        public Component getListCellRendererComponent(JList list, Object value, int index, 
+                                                      boolean isSelected, boolean cellHasFocus) {
+          if (value == null) {
+            value = " ";
+          } else {
+           value = ((FurnitureCategory)value).getName();
+          }
+          return super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        }
+      });
+    this.categoryComboBox.addItemListener(new ItemListener() {
+        public void itemStateChanged(ItemEvent ev) {
+          controller.setCategory((FurnitureCategory)ev.getItem());
+        }
+      });
+    controller.addPropertyChangeListener(FurnitureController.Property.CATEGORY,
+        new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
-            staircaseCutOutShapeTextField.setText(controller.getStaircaseCutOutShape());
-          }
-        };
-      controller.addPropertyChangeListener(FurnitureController.Property.STAIRCASE_CUT_OUT_SHAPE, staircaseCutOutShapeChangeListener);
-      final Color defaultTextFieldColor = this.staircaseCutOutShapeTextField.getForeground();
-      this.staircaseCutOutShapeTextField.getDocument().addDocumentListener(new DocumentListener() {
-          public void changedUpdate(DocumentEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.STAIRCASE_CUT_OUT_SHAPE, staircaseCutOutShapeChangeListener);
-            String staircaseCutOutShape = staircaseCutOutShapeTextField.getText(); 
-            if (staircaseCutOutShape == null || staircaseCutOutShape.trim().length() == 0) {
-              controller.setStaircaseCutOutShape(null);
-            } else {
-              controller.setStaircaseCutOutShape(staircaseCutOutShape);
-              try {
-                PathParser pathParser = new PathParser();
-                pathParser.setPathHandler(new AWTPathProducer());
-                pathParser.parse(staircaseCutOutShape);
-                staircaseCutOutShapeTextField.setForeground(defaultTextFieldColor);
-              } catch (ParseException ex) {
-                staircaseCutOutShapeTextField.setForeground(Color.RED);
-              } catch (NullPointerException ex) {
-                staircaseCutOutShapeTextField.setForeground(Color.RED);
-              }
+            // If category changes update category combo box
+            FurnitureCategory category = controller.getCategory();
+            if (category != null) {
+              categoryComboBox.setSelectedItem(category);
             }
-            controller.addPropertyChangeListener(FurnitureController.Property.STAIRCASE_CUT_OUT_SHAPE, staircaseCutOutShapeChangeListener);
-          }
-    
-          public void insertUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-    
-          public void removeUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
           }
         });
+    if (this.categoryComboBox.getItemCount() > 0) {
+      this.categoryComboBox.setSelectedItem(controller.getCategory());
     }
+    this.categoryComboBox.setMaximumRowCount(15);
     
-    if (this.controller.isPropertyEditable(FurnitureController.Property.BACK_FACE_SHOWN)) {
-      // Create back face shown check box bound to BACK_FACE_SHOWN controller property
-      this.backFaceShownCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "backFaceShownCheckBox.text"));
-      this.backFaceShownCheckBox.setNullable(controller.getBackFaceShown() == null);
-      this.backFaceShownCheckBox.setValue(controller.getBackFaceShown());
-      final PropertyChangeListener backFaceShownChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          backFaceShownCheckBox.setNullable(ev.getNewValue() == null);
-          backFaceShownCheckBox.setValue((Boolean)ev.getNewValue());
+    // Create price label and its spinner bound to PRICE controller property
+    this.priceLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "priceLabel.text"));
+    final NullableSpinner.NullableSpinnerNumberModel priceSpinnerModel = 
+        new NullableSpinner.NullableSpinnerNumberModel(1, 0.00999f, 1000000f, 1f);
+    this.priceSpinner = new AutoCommitSpinner(priceSpinnerModel);
+    priceSpinnerModel.setNullable(controller.getPrice() == null);
+    priceSpinnerModel.setValue(controller.getPrice());
+    final PropertyChangeListener priceChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        priceSpinnerModel.setNullable(ev.getNewValue() == null);
+        priceSpinnerModel.setValue((Float)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.PRICE, priceChangeListener);
+    priceSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.PRICE, priceChangeListener);
+          Object value = priceSpinnerModel.getValue();
+          controller.setPrice(value != null 
+              ? new BigDecimal((Float)value).setScale(2, BigDecimal.ROUND_HALF_UP)
+              : (BigDecimal)value);
+          controller.addPropertyChangeListener(FurnitureController.Property.PRICE, priceChangeListener);
         }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.BACK_FACE_SHOWN, backFaceShownChangeListener);
-      this.backFaceShownCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.BACK_FACE_SHOWN, backFaceShownChangeListener);
-            controller.setBackFaceShown(backFaceShownCheckBox.getValue());
+      });
+
+    // Create VAT % label and its spinner bound to VALUE_ADDED_TAX_PERCENTAGE controller property
+    this.valueAddedTaxPercentageLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "valueAddedTaxPercentageLabel.text"));
+    final NullableSpinner.NullableSpinnerNumberModel valueAddedTaxPercentageSpinnerModel = 
+        new NullableSpinner.NullableSpinnerNumberModel(0, 0, 100f, 0.1f);
+    this.valueAddedTaxPercentageSpinner = new AutoCommitSpinner(valueAddedTaxPercentageSpinnerModel);
+    valueAddedTaxPercentageSpinnerModel.setNullable(controller.getValueAddedTaxPercentage() == null);
+    valueAddedTaxPercentageSpinnerModel.setValue(controller.getValueAddedTaxPercentage() == null
+        ? null
+        : controller.getValueAddedTaxPercentage().floatValue() * 100);
+    final PropertyChangeListener valueAddedTaxPercentageChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        valueAddedTaxPercentageSpinnerModel.setNullable(ev.getNewValue() == null);
+        valueAddedTaxPercentageSpinnerModel.setValue(ev.getNewValue() == null
+            ? null
+            : ((Float)ev.getNewValue()) * 100);
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE, valueAddedTaxPercentageChangeListener);
+    valueAddedTaxPercentageSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE, valueAddedTaxPercentageChangeListener);
+          Object value = valueAddedTaxPercentageSpinnerModel.getValue();
+          controller.setValueAddedTaxPercentage(value != null 
+              ? new BigDecimal((Float)value / 100).setScale(3, BigDecimal.ROUND_HALF_UP)
+              : (BigDecimal)value);
+          controller.addPropertyChangeListener(FurnitureController.Property.VALUE_ADDED_TAX_PERCENTAGE, valueAddedTaxPercentageChangeListener);
+        }
+      });
+    
+    // Create width label and its spinner bound to WIDTH controller property
+    this.widthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "widthLabel.text", unitName));
+    final NullableSpinner.NullableSpinnerLengthModel widthSpinnerModel = 
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 100000f);
+    this.widthSpinner = new AutoCommitSpinner(widthSpinnerModel);
+    widthSpinnerModel.setNullable(controller.getWidth() == null);
+    widthSpinnerModel.setLength(controller.getWidth());
+    final PropertyChangeListener widthChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        widthSpinnerModel.setNullable(ev.getNewValue() == null);
+        widthSpinnerModel.setLength((Float)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.WIDTH, widthChangeListener);
+    widthSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.WIDTH, widthChangeListener);
+          controller.setWidth(widthSpinnerModel.getLength());
+          if (!controller.isProportional()) {
             resetIcon(false);
-            controller.addPropertyChangeListener(FurnitureController.Property.BACK_FACE_SHOWN, backFaceShownChangeListener);
           }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.RESIZABLE)) {
-      // Create resizable check box bound to RESIZABLE controller property
-      this.resizableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "resizableCheckBox.text"));
-      this.resizableCheckBox.setNullable(controller.getResizable() == null);
-      this.resizableCheckBox.setValue(controller.getResizable());
-      final PropertyChangeListener resizableChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          resizableCheckBox.setNullable(ev.getNewValue() == null);
-          resizableCheckBox.setValue((Boolean)ev.getNewValue());
+          controller.addPropertyChangeListener(FurnitureController.Property.WIDTH, widthChangeListener);
         }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.RESIZABLE, resizableChangeListener);
-      this.resizableCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.RESIZABLE, resizableChangeListener);
-            controller.setResizable(resizableCheckBox.getValue());
-            controller.addPropertyChangeListener(FurnitureController.Property.RESIZABLE, resizableChangeListener);
-          }
-        });
-    }
+      });
     
-    if (this.controller.isPropertyEditable(FurnitureController.Property.DEFORMABLE)) {
-      // Create deformable check box bound to DEFORMABLE controller property
-      this.deformableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "deformableCheckBox.text"));
-      this.deformableCheckBox.setNullable(controller.getDeformable() == null);
-      this.deformableCheckBox.setValue(controller.getDeformable());
-      final PropertyChangeListener deformableChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          deformableCheckBox.setNullable(ev.getNewValue() == null);
-          deformableCheckBox.setValue((Boolean)ev.getNewValue());
-        }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.DEFORMABLE, deformableChangeListener);
-      this.deformableCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.DEFORMABLE, deformableChangeListener);
-            controller.setDeformable(deformableCheckBox.getValue());
-            controller.addPropertyChangeListener(FurnitureController.Property.DEFORMABLE, deformableChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.TEXTURABLE)) {
-      // Create texturable check box bound to TEXTURABLE controller property
-      this.texturableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
-          FurniturePanel.class, "texturableCheckBox.text"));
-      this.texturableCheckBox.setNullable(controller.getTexturable() == null);
-      this.texturableCheckBox.setValue(controller.getTexturable());
-      final PropertyChangeListener texturableChangeListener = new PropertyChangeListener() {
-        public void propertyChange(PropertyChangeEvent ev) {
-          texturableCheckBox.setNullable(ev.getNewValue() == null);
-          texturableCheckBox.setValue((Boolean)ev.getNewValue());
-        }
-      };
-      controller.addPropertyChangeListener(FurnitureController.Property.TEXTURABLE, texturableChangeListener);
-      this.texturableCheckBox.addChangeListener(new ChangeListener() {
-          public void stateChanged(ChangeEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.TEXTURABLE, texturableChangeListener);
-            controller.setTexturable(texturableCheckBox.getValue());
-            controller.addPropertyChangeListener(FurnitureController.Property.TEXTURABLE, texturableChangeListener);
-          }
-        });
-    }
-    
-    if (this.controller.isPropertyEditable(FurnitureController.Property.CREATOR)) {
-      // Create creator label and its text field bound to CREATOR controller property
-      this.creatorLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "creatorLabel.text"));
-      this.creatorTextField = new JTextField(controller.getCreator(), 10);
-      if (!OperatingSystem.isMacOSX()) {
-        SwingTools.addAutoSelectionOnFocusGain(this.creatorTextField);
+    // Create depth label and its spinner bound to DEPTH controller property
+    this.depthLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "depthLabel.text", unitName));
+    final NullableSpinner.NullableSpinnerLengthModel depthSpinnerModel = 
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 100000f);
+    this.depthSpinner = new NullableSpinner(depthSpinnerModel);
+    depthSpinnerModel.setNullable(controller.getDepth() == null);
+    depthSpinnerModel.setLength(controller.getDepth());
+    final PropertyChangeListener depthChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        depthSpinnerModel.setNullable(ev.getNewValue() == null);
+        depthSpinnerModel.setLength((Float)ev.getNewValue());
       }
-      final PropertyChangeListener creatorChangeListener = new PropertyChangeListener() {
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.DEPTH, depthChangeListener);
+    depthSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.DEPTH, depthChangeListener);
+          controller.setDepth(depthSpinnerModel.getLength());
+          if (!controller.isProportional()) {
+            resetIcon(false);
+          }
+          controller.addPropertyChangeListener(FurnitureController.Property.DEPTH, depthChangeListener);
+        }
+      });
+    
+    // Create height label and its spinner bound to HEIGHT controller property
+    this.heightLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "heightLabel.text", unitName));
+    final NullableSpinner.NullableSpinnerLengthModel heightSpinnerModel = 
+        new NullableSpinner.NullableSpinnerLengthModel(preferences, 0.09999f, 100000f);
+    this.heightSpinner = new NullableSpinner(heightSpinnerModel);
+    heightSpinnerModel.setNullable(controller.getHeight() == null);
+    heightSpinnerModel.setLength(controller.getHeight());
+    final PropertyChangeListener heightChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        heightSpinnerModel.setNullable(ev.getNewValue() == null);
+        heightSpinnerModel.setLength((Float)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.HEIGHT, heightChangeListener);
+    heightSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.HEIGHT, heightChangeListener);
+          controller.setHeight(heightSpinnerModel.getLength());
+          if (!controller.isProportional()) {
+            resetIcon(false);
+          }
+          controller.addPropertyChangeListener(FurnitureController.Property.HEIGHT, heightChangeListener);
+        }
+      });
+    
+    this.keepProportionsCheckBox = new JCheckBox(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "keepProportionsCheckBox.text"), controller.isProportional());
+    this.keepProportionsCheckBox.addItemListener(new ItemListener() {
+        public void itemStateChanged(ItemEvent ev) {
+          controller.setProportional(keepProportionsCheckBox.isSelected());
+        }
+      });
+    controller.addPropertyChangeListener(FurnitureController.Property.PROPORTIONAL,
+        new PropertyChangeListener() {
           public void propertyChange(PropertyChangeEvent ev) {
-            creatorTextField.setText(controller.getCreator());
+            // If proportional property changes update keep proportions check box
+            keepProportionsCheckBox.setSelected(controller.isProportional());
           }
-        };
-      controller.addPropertyChangeListener(FurnitureController.Property.CREATOR, creatorChangeListener);
-      this.creatorTextField.getDocument().addDocumentListener(new DocumentListener() {
-          public void changedUpdate(DocumentEvent ev) {
-            controller.removePropertyChangeListener(FurnitureController.Property.CREATOR, creatorChangeListener);
-            String creator = creatorTextField.getText(); 
-            if (creator == null || creator.trim().length() == 0) {
-              controller.setCreator(null);
-            } else {
-              controller.setCreator(creator);
-            }
-            controller.addPropertyChangeListener(FurnitureController.Property.CREATOR, creatorChangeListener);
-          }
+        });
     
-          public void insertUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-    
-          public void removeUpdate(DocumentEvent ev) {
-            changedUpdate(ev);
-          }
-        });
-    }
-  
-    if (this.controller.isPropertyEditable(FurnitureController.Property.ICON)) {
-      this.iconComponent = new IconPreviewComponent(controller, preferences);
-      
-      this.turnLeftButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_LEFT", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            Transform3D oldTransform = getModelRotationTransform();
-            Transform3D leftRotation = new Transform3D();
-            leftRotation.rotY(-Math.PI / 2);
-            leftRotation.mul(oldTransform);
-            updateModelRotation(leftRotation);
-          }
-        });
-      this.turnRightButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_RIGHT", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            Transform3D oldTransform = getModelRotationTransform();
-            Transform3D rightRotation = new Transform3D();
-            rightRotation.rotY(Math.PI / 2);
-            rightRotation.mul(oldTransform);
-            updateModelRotation(rightRotation);
-          }
-        });
-      this.turnUpButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_UP", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            Transform3D oldTransform = getModelRotationTransform();
-            Transform3D upRotation = new Transform3D();
-            upRotation.rotX(-Math.PI / 2);
-            upRotation.mul(oldTransform);
-            updateModelRotation(upRotation);
-          }
-        });
-      this.turnDownButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_DOWN", true) {
-          @Override
-          public void actionPerformed(ActionEvent ev) {
-            Transform3D oldTransform = getModelRotationTransform();
-            Transform3D downRotation = new Transform3D();
-            downRotation.rotX(Math.PI / 2);
-            downRotation.mul(oldTransform);
-            updateModelRotation(downRotation);
-          }
-        });
-    }
+    // Create elevation label and its spinner bound to ELEVATION controller property
+    this.elevationLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "elevationLabel.text", unitName));
+    final NullableSpinner.NullableSpinnerLengthModel elevationSpinnerModel = 
+      new NullableSpinner.NullableSpinnerLengthModel(preferences, 0f, 1000f);
+    this.elevationSpinner = new NullableSpinner(elevationSpinnerModel);
+    elevationSpinnerModel.setNullable(controller.getElevation() == null);
+    elevationSpinnerModel.setLength(controller.getElevation());
+    final PropertyChangeListener elevationChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        elevationSpinnerModel.setNullable(ev.getNewValue() == null);
+        elevationSpinnerModel.setLength((Float)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.ELEVATION, 
+        elevationChangeListener);
+    elevationSpinnerModel.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.ELEVATION, 
+              elevationChangeListener);
+          controller.setElevation(elevationSpinnerModel.getLength());
+          controller.addPropertyChangeListener(FurnitureController.Property.ELEVATION, 
+              elevationChangeListener);
+        }
+      });
 
+    // Create movable check box bound to MOVABLE controller property
+    this.movableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "movableCheckBox.text"));
+    this.movableCheckBox.setNullable(controller.getMovable() == null);
+    this.movableCheckBox.setValue(controller.getMovable());
+    final PropertyChangeListener movableChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        movableCheckBox.setNullable(ev.getNewValue() == null);
+        movableCheckBox.setValue((Boolean)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.MOVABLE, movableChangeListener);
+    this.movableCheckBox.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.MOVABLE, movableChangeListener);
+          controller.setMovable(movableCheckBox.getValue());
+          controller.addPropertyChangeListener(FurnitureController.Property.MOVABLE, movableChangeListener);
+        }
+      });
+    
+    // Create doorOrWindow check box bound to DOOR_OR_WINDOW controller property
+    this.doorOrWindowCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "doorOrWindowCheckBox.text"));
+    this.doorOrWindowCheckBox.setNullable(controller.getDoorOrWindow() == null);
+    this.doorOrWindowCheckBox.setValue(controller.getDoorOrWindow());
+    final PropertyChangeListener doorOrWindowChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        doorOrWindowCheckBox.setNullable(ev.getNewValue() == null);
+        doorOrWindowCheckBox.setValue((Boolean)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.DOOR_OR_WINDOW, doorOrWindowChangeListener);
+    this.doorOrWindowCheckBox.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.DOOR_OR_WINDOW, doorOrWindowChangeListener);
+          controller.setDoorOrWindow(doorOrWindowCheckBox.getValue());
+          controller.addPropertyChangeListener(FurnitureController.Property.DOOR_OR_WINDOW, doorOrWindowChangeListener);
+        }
+      });
+    
+    // Create back face shown check box bound to BACK_FACE_SHOWN controller property
+    this.backFaceShownCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "backFaceShownCheckBox.text"));
+    this.backFaceShownCheckBox.setNullable(controller.getBackFaceShown() == null);
+    this.backFaceShownCheckBox.setValue(controller.getBackFaceShown());
+    final PropertyChangeListener backFaceShownChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        backFaceShownCheckBox.setNullable(ev.getNewValue() == null);
+        backFaceShownCheckBox.setValue((Boolean)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.BACK_FACE_SHOWN, backFaceShownChangeListener);
+    this.backFaceShownCheckBox.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.BACK_FACE_SHOWN, backFaceShownChangeListener);
+          controller.setBackFaceShown(backFaceShownCheckBox.getValue());
+          resetIcon(false);
+          controller.addPropertyChangeListener(FurnitureController.Property.BACK_FACE_SHOWN, backFaceShownChangeListener);
+        }
+      });
+    
+    // Create resizable check box bound to RESIZABLE controller property
+    this.resizableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "resizableCheckBox.text"));
+    this.resizableCheckBox.setNullable(controller.getResizable() == null);
+    this.resizableCheckBox.setValue(controller.getResizable());
+    final PropertyChangeListener resizableChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        resizableCheckBox.setNullable(ev.getNewValue() == null);
+        resizableCheckBox.setValue((Boolean)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.RESIZABLE, resizableChangeListener);
+    this.resizableCheckBox.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.RESIZABLE, resizableChangeListener);
+          controller.setResizable(resizableCheckBox.getValue());
+          controller.addPropertyChangeListener(FurnitureController.Property.RESIZABLE, resizableChangeListener);
+        }
+      });
+    
+    // Create deformable check box bound to DEFORMABLE controller property
+    this.deformableCheckBox = new NullableCheckBox(SwingTools.getLocalizedLabelText(preferences, 
+        FurniturePanel.class, "deformableCheckBox.text"));
+    this.deformableCheckBox.setNullable(controller.getDeformable() == null);
+    this.deformableCheckBox.setValue(controller.getDeformable());
+    final PropertyChangeListener deformableChangeListener = new PropertyChangeListener() {
+      public void propertyChange(PropertyChangeEvent ev) {
+        deformableCheckBox.setNullable(ev.getNewValue() == null);
+        deformableCheckBox.setValue((Boolean)ev.getNewValue());
+      }
+    };
+    controller.addPropertyChangeListener(FurnitureController.Property.DEFORMABLE, deformableChangeListener);
+    this.deformableCheckBox.addChangeListener(new ChangeListener() {
+        public void stateChanged(ChangeEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.DEFORMABLE, deformableChangeListener);
+          controller.setDeformable(deformableCheckBox.getValue());
+          controller.addPropertyChangeListener(FurnitureController.Property.DEFORMABLE, deformableChangeListener);
+        }
+      });
+    
+    // Create creator label and its text field bound to CREATOR controller property
+    this.creatorLabel = new JLabel(SwingTools.getLocalizedLabelText(preferences, FurniturePanel.class, "creatorLabel.text"));
+    this.creatorTextField = new JTextField(controller.getCreator(), 10);
+    if (!OperatingSystem.isMacOSX()) {
+      SwingTools.addAutoSelectionOnFocusGain(this.creatorTextField);
+    }
+    final PropertyChangeListener creatorChangeListener = new PropertyChangeListener() {
+        public void propertyChange(PropertyChangeEvent ev) {
+          creatorTextField.setText(controller.getCreator());
+        }
+      };
+    controller.addPropertyChangeListener(FurnitureController.Property.CREATOR, creatorChangeListener);
+    this.creatorTextField.getDocument().addDocumentListener(new DocumentListener() {
+        public void changedUpdate(DocumentEvent ev) {
+          controller.removePropertyChangeListener(FurnitureController.Property.CREATOR, creatorChangeListener);
+          String creator = creatorTextField.getText(); 
+          if (creator == null || creator.trim().length() == 0) {
+            controller.setCreator(null);
+          } else {
+            controller.setCreator(creator);
+          }
+          controller.addPropertyChangeListener(FurnitureController.Property.CREATOR, creatorChangeListener);
+        }
+  
+        public void insertUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+  
+        public void removeUpdate(DocumentEvent ev) {
+          changedUpdate(ev);
+        }
+      });
+        
+    this.iconComponent = new IconPreviewComponent(controller, preferences);
+    
+    this.turnLeftButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_LEFT", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          Transform3D oldTransform = getModelRotationTransform();
+          Transform3D leftRotation = new Transform3D();
+          leftRotation.rotY(-Math.PI / 2);
+          leftRotation.mul(oldTransform);
+          updateModelRotation(leftRotation);
+        }
+      });
+    this.turnRightButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_RIGHT", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          Transform3D oldTransform = getModelRotationTransform();
+          Transform3D rightRotation = new Transform3D();
+          rightRotation.rotY(Math.PI / 2);
+          rightRotation.mul(oldTransform);
+          updateModelRotation(rightRotation);
+        }
+      });
+    this.turnUpButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_UP", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          Transform3D oldTransform = getModelRotationTransform();
+          Transform3D upRotation = new Transform3D();
+          upRotation.rotX(-Math.PI / 2);
+          upRotation.mul(oldTransform);
+          updateModelRotation(upRotation);
+        }
+      });
+    this.turnDownButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "TURN_DOWN", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          Transform3D oldTransform = getModelRotationTransform();
+          Transform3D downRotation = new Transform3D();
+          downRotation.rotX(Math.PI / 2);
+          downRotation.mul(oldTransform);
+          updateModelRotation(downRotation);
+        }
+      });
+
+    this.enlargeTenTimesButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "ENLARGE_TEN_TIMES", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          controller.multiplySize(10);
+        }
+      });
+    this.reduceTenTimesButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "REDUCE_TEN_TIMES", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          controller.multiplySize(0.1f);
+        }
+      });
+    this.enlargeInchTimesButton = new JButton(new ResourceAction(preferences, FurniturePanel.class, "ENLARGE_INCH_TIMES", true) {
+        @Override
+        public void actionPerformed(ActionEvent ev) {
+          controller.multiplySize(2.54f);
+        }
+      });
+    
     this.dialogTitle = preferences.getLocalizedString(FurniturePanel.class, "homeFurniture.title");
   }
   
@@ -883,15 +738,13 @@ public class FurniturePanel extends JPanel implements DialogView {
    * Resets the model icon. 
    */
   private void resetIcon(boolean resetView) {
-    if (this.controller.isPropertyEditable(FurnitureController.Property.ICON)) {
-      try {
-        if (resetView) {
-          this.iconComponent.resetView();
-        }
-        this.controller.setIcon(this.iconComponent.getIcon(400));
-      } catch (IOException ex) {
-        ex.printStackTrace();
+    try {
+      if (resetView) {
+        this.iconComponent.resetView();
       }
+      this.controller.setIcon(this.iconComponent.getIcon(400));
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
@@ -900,98 +753,51 @@ public class FurniturePanel extends JPanel implements DialogView {
    */
   private void setMnemonics(UserPreferences preferences) {
     if (!OperatingSystem.isMacOSX()) {
-      if (this.idLabel != null) {
-        this.idLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "idLabel.mnemonic")).getKeyCode());
-        this.idLabel.setLabelFor(this.idTextField);
-      }
-      if (this.nameLabel != null) {
-        this.nameLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "nameLabel.mnemonic")).getKeyCode());
-        this.nameLabel.setLabelFor(this.nameTextField);
-      }
-      if (this.descriptionLabel != null) {
-        this.descriptionLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "descriptionLabel.mnemonic")).getKeyCode());
-        this.descriptionLabel.setLabelFor(this.descriptionTextField);
-      }
-      if (this.categoryLabel != null) {
-        this.categoryLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "categoryLabel.mnemonic")).getKeyCode());
-        this.categoryLabel.setLabelFor(this.categoryComboBox);
-      }
-      if (this.priceLabel != null) {
-        this.priceLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "priceLabel.mnemonic")).getKeyCode());
-        this.priceLabel.setLabelFor(this.priceSpinner);
-      }
-      if (this.priceLabel != null) {
-        this.valueAddedTaxPercentageLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "valueAddedTaxPercentageLabel.mnemonic")).getKeyCode());
-        this.valueAddedTaxPercentageLabel.setLabelFor(this.valueAddedTaxPercentageSpinner);
-      }
-      if (this.widthLabel != null) {
-        this.widthLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "widthLabel.mnemonic")).getKeyCode());
-        this.widthLabel.setLabelFor(this.widthSpinner);
-      }
-      if (this.depthLabel != null) {
-        this.depthLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "depthLabel.mnemonic")).getKeyCode());
-        this.depthLabel.setLabelFor(this.depthSpinner);
-      }
-      if (this.heightLabel != null) {
-        this.heightLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "heightLabel.mnemonic")).getKeyCode());
-        this.heightLabel.setLabelFor(this.heightSpinner);
-      }
-      if (this.keepProportionsCheckBox != null) {
-        this.keepProportionsCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "keepProportionsCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.elevationLabel != null) {
-        this.elevationLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "elevationLabel.mnemonic")).getKeyCode());
-        this.elevationLabel.setLabelFor(this.elevationSpinner);
-      }
-      if (this.movableCheckBox != null) {
-        this.movableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "movableCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.doorOrWindowCheckBox != null) {
-        this.doorOrWindowCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "doorOrWindowCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.staircaseCheckBox != null) {
-        this.staircaseCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "staircaseCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.staircaseCutOutShapeLabel != null) {
-        this.staircaseCutOutShapeLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "staircaseCutOutShapeLabel.mnemonic")).getKeyCode());
-        this.staircaseCutOutShapeLabel.setLabelFor(this.staircaseCutOutShapeTextField);
-      }
-      if (this.backFaceShownCheckBox != null) {
-        this.backFaceShownCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "backFaceShownCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.resizableCheckBox != null) {
-        this.resizableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "resizableCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.deformableCheckBox != null) {
-        this.deformableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "deformableCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.texturableCheckBox != null) {
-        this.texturableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "texturableCheckBox.mnemonic")).getKeyCode());
-      }
-      if (this.creatorLabel != null) {
-        this.creatorLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
-            FurniturePanel.class, "creatorLabel.mnemonic")).getKeyCode());
-        this.creatorLabel.setLabelFor(this.creatorTextField);
-      }
+      this.idLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "idLabel.mnemonic")).getKeyCode());
+      this.idLabel.setLabelFor(this.idTextField);
+      this.nameLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "nameLabel.mnemonic")).getKeyCode());
+      this.nameLabel.setLabelFor(this.nameTextField);
+      this.descriptionLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "descriptionLabel.mnemonic")).getKeyCode());
+      this.descriptionLabel.setLabelFor(this.descriptionTextField);
+      this.categoryLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "categoryLabel.mnemonic")).getKeyCode());
+      this.categoryLabel.setLabelFor(this.categoryComboBox);
+      this.priceLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "priceLabel.mnemonic")).getKeyCode());
+      this.priceLabel.setLabelFor(this.priceSpinner);
+      this.valueAddedTaxPercentageLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "valueAddedTaxPercentageLabel.mnemonic")).getKeyCode());
+      this.valueAddedTaxPercentageLabel.setLabelFor(this.valueAddedTaxPercentageSpinner);
+      this.widthLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "widthLabel.mnemonic")).getKeyCode());
+      this.widthLabel.setLabelFor(this.widthSpinner);
+      this.depthLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "depthLabel.mnemonic")).getKeyCode());
+      this.depthLabel.setLabelFor(this.depthSpinner);
+      this.heightLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "heightLabel.mnemonic")).getKeyCode());
+      this.heightLabel.setLabelFor(this.heightSpinner);
+      this.keepProportionsCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "keepProportionsCheckBox.mnemonic")).getKeyCode());
+      this.elevationLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "elevationLabel.mnemonic")).getKeyCode());
+      this.elevationLabel.setLabelFor(this.elevationSpinner);
+      this.movableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "movableCheckBox.mnemonic")).getKeyCode());
+      this.doorOrWindowCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "doorOrWindowCheckBox.mnemonic")).getKeyCode());
+      this.backFaceShownCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "backFaceShownCheckBox.mnemonic")).getKeyCode());
+      this.resizableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "resizableCheckBox.mnemonic")).getKeyCode());
+      this.deformableCheckBox.setMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "deformableCheckBox.mnemonic")).getKeyCode());
+      this.creatorLabel.setDisplayedMnemonic(KeyStroke.getKeyStroke(preferences.getLocalizedString(
+          FurniturePanel.class, "creatorLabel.mnemonic")).getKeyCode());
+      this.creatorLabel.setLabelFor(this.creatorTextField);
     }
   }
   
@@ -1148,45 +954,29 @@ public class FurniturePanel extends JPanel implements DialogView {
           4, 7, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
           GridBagConstraints.HORIZONTAL, componentInsets, 0, 0));
     }
-    if (this.controller.isPropertyEditable(FurnitureController.Property.DOOR_OR_WINDOW)) {
-      add(this.doorOrWindowCheckBox, new GridBagConstraints(
-          1, 8, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-          GridBagConstraints.NONE, componentInsets, 0, 0));
-    }
     if (this.controller.isPropertyEditable(FurnitureController.Property.BACK_FACE_SHOWN)) {
       add(this.backFaceShownCheckBox, new GridBagConstraints(
           2, 8, 2, 1, 0, 0, GridBagConstraints.LINE_START, 
           GridBagConstraints.NONE, componentInsets, 0, 0));
     }
-    if (this.controller.isPropertyEditable(FurnitureController.Property.STAIRCASE_CUT_OUT_SHAPE)) {
-      add(this.staircaseCheckBox, new GridBagConstraints(
-          1, 9, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+    if (this.controller.isPropertyEditable(FurnitureController.Property.DOOR_OR_WINDOW)) {
+      add(this.doorOrWindowCheckBox, new GridBagConstraints(
+          4, 8, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
           GridBagConstraints.NONE, componentInsets, 0, 0));
-      add(this.staircaseCutOutShapeLabel, new GridBagConstraints(
-          2, 9, 1, 1, 0, 0, labelAlignment, 
-          GridBagConstraints.NONE, labelInsets, 0, 0));
-      add(this.staircaseCutOutShapeTextField, new GridBagConstraints(
-          3, 9, 2, 1, 0, 0, GridBagConstraints.LINE_START, 
-          GridBagConstraints.HORIZONTAL, componentInsets, 0, 0));
     }
     if (this.controller.isPropertyEditable(FurnitureController.Property.MOVABLE)) {
       add(this.movableCheckBox, new GridBagConstraints(
-          1, 10, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
-          GridBagConstraints.NONE, componentInsets, 0, 0));
-    }
-    if (this.controller.isPropertyEditable(FurnitureController.Property.RESIZABLE)) {
-      add(this.resizableCheckBox, new GridBagConstraints(
-          2, 10, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+          2, 9, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
           GridBagConstraints.NONE, componentInsets, 0, 0));
     }
     if (this.controller.isPropertyEditable(FurnitureController.Property.DEFORMABLE)) {
       add(this.deformableCheckBox, new GridBagConstraints(
-          3, 10, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+          3, 9, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
           GridBagConstraints.NONE, componentInsets, 0, 0));
     }
-    if (this.controller.isPropertyEditable(FurnitureController.Property.TEXTURABLE)) {
-      add(this.texturableCheckBox, new GridBagConstraints(
-          4, 10, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
+    if (this.controller.isPropertyEditable(FurnitureController.Property.RESIZABLE)) {
+      add(this.resizableCheckBox, new GridBagConstraints(
+          4, 9, 1, 1, 0, 0, GridBagConstraints.LINE_START, 
           GridBagConstraints.NONE, componentInsets, 0, 0));
     }
   }
@@ -1245,7 +1035,7 @@ public class FurniturePanel extends JPanel implements DialogView {
               controller.getWidth(), controller.getDepth(), controller.getHeight());
         }
         
-        addMouseListener(new MouseAdapter() {
+        getCanvas3D().addMouseListener(new MouseAdapter() {
           private boolean mousePressedInIcon;
 
           @Override

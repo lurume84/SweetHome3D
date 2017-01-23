@@ -1,7 +1,7 @@
 /*
  * FurnitureLibrary.java 18 déc. 2009
  *
- * Furniture Library Editor, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,12 +63,11 @@ public class FurnitureLibrary {
   public static final String FURNITURE_HEIGHT_PROPERTY                     = "HEIGHT";
   public static final String FURNITURE_MOVABLE_PROPERTY                    = "MOVABLE";
   public static final String FURNITURE_DOOR_OR_WINDOW_PROPERTY             = "DOOR_OR_WINDOW";
-  public static final String FURNITURE_STAIRCASE_CUT_OUT_SHAPE_PROPERTY    = "STAIRCASE_CUT_OUT_SHAPE";
   public static final String FURNITURE_ELEVATION_PROPERTY                  = "ELEVATION";
   public static final String FURNITURE_MODEL_ROTATION_PROPERTY             = "MODEL_ROTATION";
   public static final String FURNITURE_RESIZABLE_PROPERTY                  = "RESIZABLE";
   public static final String FURNITURE_DEFORMABLE_PROPERTY                 = "DEFORMABLE";
-  public static final String FURNITURE_TEXTURABLE_PROPERTY                 = "TEXTURABLE";
+
   
   private final PropertyChangeSupport                                    propertyChangeSupport;
   private List<CatalogPieceOfFurniture>                                  furniture;

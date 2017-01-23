@@ -1,7 +1,7 @@
 /*
  * FurnitureLibraryUserPreferences.java 6 juin 2010
  *
- * Furniture Library Editor, Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,6 @@ public abstract class FurnitureLibraryUserPreferences extends UserPreferences {
         FurnitureLibrary.FURNITURE_ELEVATION_PROPERTY,
         FurnitureLibrary.FURNITURE_MOVABLE_PROPERTY,
         FurnitureLibrary.FURNITURE_DOOR_OR_WINDOW_PROPERTY,
-        FurnitureLibrary.FURNITURE_STAIRCASE_CUT_OUT_SHAPE_PROPERTY,
         FurnitureLibrary.FURNITURE_MODEL_ROTATION_PROPERTY};
     setUnit(LengthUnit.CENTIMETER);
     this.offlineFurnitureLibrary = true;
@@ -188,13 +187,5 @@ public abstract class FurnitureLibraryUserPreferences extends UserPreferences {
       this.propertyChangeSupport.firePropertyChange(Property.FURNITURE_RESOURCES_REMOTE_URL_BASE.toString(),
           oldValue, furnitureResourcesRemoteUrlBase);
     }
-  }
-
-  /**
-   * Returns <code>true</code> if the furniture content saved with the library should be named 
-   * from the furniture name in the default language.
-   */
-  public boolean isContentMatchingFurnitureName() {
-    return true;
   }
 }

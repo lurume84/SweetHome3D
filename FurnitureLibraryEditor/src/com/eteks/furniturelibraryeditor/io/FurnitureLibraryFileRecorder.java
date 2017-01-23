@@ -1,7 +1,7 @@
 /*
  * FurnitureLibraryFileRecorder.java 22 déc. 2009
  *
- * Furniture Library Editor, Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2009 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,10 +33,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -116,7 +113,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
             if (piece != null) {
               // Set furniture category through dummy catalog
               FurnitureCategory category = super.readFurnitureCategory(resource, index);
-              new FurnitureCatalog().add(category, piece);
+              new FurnitureCatalog() { }.add(category, piece);
               furniture.add(piece);
             }
             return piece;
@@ -209,7 +206,6 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
                                     FurnitureLibraryUserPreferences userPreferences) throws RecorderException {
     writeFurnitureLibrary(furnitureLibrary, furnitureLibraryName, 
         userPreferences.isFurnitureLibraryOffline(), 
-        userPreferences.isContentMatchingFurnitureName(),
         userPreferences.getFurnitureResourcesLocalDirectory(), 
         userPreferences.getFurnitureResourcesRemoteURLBase());
   }
@@ -218,8 +214,6 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
    * Writes furniture library .properties files in the <code>furnitureLibraryName</code> file. 
    * @param offlineFurnitureLibrary if <code>offlineFurnitureLibrary</code> is <code>true</code> content 
    *                       referenced by furniture is always embedded in the file
-   * @param contentMatchingFurnitureName <code>true</code> if the furniture content saved with the library 
-   *                       should be named from the furniture name in the default language                      
    * @param furnitureResourcesLocalDirectory  directory where content referenced by furniture will be saved
    *                       if it isn't <code>null</code>
    * @param furnitureResourcesRemoteUrlBase   URL base used for content referenced by furniture in .properties file 
@@ -228,7 +222,6 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
   private void writeFurnitureLibrary(FurnitureLibrary furnitureLibrary,
                                      String furnitureLibraryName,
                                      boolean offlineFurnitureLibrary,
-                                     boolean contentMatchingFurnitureName,
                                      String  furnitureResourcesLocalDirectory,
                                      String  furnitureResourcesRemoteUrlBase) throws RecorderException {
     URL furnitureResourcesRemoteAbsoluteUrlBase = null;
@@ -263,8 +256,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         // Write furniture description file in first entry 
         zipOut.putNextEntry(new ZipEntry(DefaultFurnitureCatalog.PLUGIN_FURNITURE_CATALOG_FAMILY + ".properties"));
         writeFurnitureLibraryProperties(zipOut, furnitureLibrary, furnitureLibraryFile, 
-            offlineFurnitureLibrary, contentMatchingFurnitureName,
-            furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase, 
+            offlineFurnitureLibrary, furnitureResourcesRemoteAbsoluteUrlBase, furnitureResourcesRemoteRelativeUrlBase, 
             contentEntries);
         zipOut.closeEntry();
         // Write supported languages description files
@@ -306,14 +298,12 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
                                                FurnitureLibrary furnitureLibrary,
                                                File furnitureLibraryFile,
                                                boolean offlineFurnitureLibrary, 
-                                               boolean contentMatchingFurnitureName,
                                                URL furnitureResourcesRemoteAbsoluteUrlBase,
                                                String furnitureResourcesRemoteRelativeUrlBase, 
                                                Map<Content, String> contentEntries) throws IOException {
     boolean keepURLContentUnchanged = !offlineFurnitureLibrary
         && furnitureResourcesRemoteAbsoluteUrlBase == null 
         && furnitureResourcesRemoteRelativeUrlBase == null;
-    DateFormat creationDateFormat = new SimpleDateFormat("yyyy-MM-dd");
     Set<String> existingEntryNames = new HashSet<String>();
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(output, "ISO-8859-1"));
     final String CATALOG_FILE_HEADER = "#\n# " 
@@ -332,38 +322,8 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.ID, i, piece.getId());
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.NAME, i, piece.getName());
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DESCRIPTION, i, piece.getDescription());
-      writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.INFORMATION, i, piece.getInformation());
-      String tags = Arrays.toString(piece.getTags());
-      if (tags.length() > 2) {
-        // Write comma separated tags without [ and ] characters
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.TAGS, i, tags.substring(1, tags.length() - 1));
-      }
-      Long creationDate = piece.getCreationDate();
-      if (creationDate != null) {
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.CREATION_DATE, i, 
-            creationDateFormat.format(new Date(piece.getCreationDate())));
-      }
-      if (piece.getGrade() != null) {
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.GRADE, i, piece.getGrade());
-      }
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.CATEGORY, i, piece.getCategory().getName());
-      Content pieceModel = piece.getModel();
-      String contentBaseName;
-      if (contentMatchingFurnitureName
-          || !(pieceModel instanceof URLContent)
-          || ((URLContent)pieceModel).getURL().getFile().toString().endsWith("model.obj")) {
-        contentBaseName = piece.getName();
-      } else {
-        String file = ((URLContent)pieceModel).getURL().getFile();
-        if (file.lastIndexOf('/') != -1) {
-          file = file.substring(file.lastIndexOf('/') + 1);
-        }
-        if (file.lastIndexOf('.') != -1) {
-          file = file.substring(0, file.lastIndexOf('.'));
-        }
-        contentBaseName = file;
-      }
-      String iconContentEntryName = getContentEntry(piece.getIcon(), contentBaseName + ".png", 
+      String iconContentEntryName = getContentEntry(piece.getIcon(), piece.getName() + ".png", 
           keepURLContentUnchanged, existingEntryNames);
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.ICON, i, 
           getContentProperty(piece.getIcon(), iconContentEntryName, offlineFurnitureLibrary, 
@@ -372,7 +332,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         contentEntries.put(piece.getIcon(), iconContentEntryName);
       }
       if (piece.getPlanIcon() != null) {
-        String planIconContentEntryName = getContentEntry(piece.getPlanIcon(), contentBaseName + "PlanIcon.png", 
+        String planIconContentEntryName = getContentEntry(piece.getPlanIcon(), piece.getName() + "PlanIcon.png", 
             keepURLContentUnchanged, existingEntryNames);
         writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.PLAN_ICON, i, 
             getContentProperty(piece.getPlanIcon(), planIconContentEntryName, offlineFurnitureLibrary,
@@ -381,6 +341,7 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
           contentEntries.put(piece.getPlanIcon(), planIconContentEntryName);
         }
       }
+      Content pieceModel = piece.getModel();
       boolean multipart = pieceModel instanceof ResourceURLContent
               && ((ResourceURLContent)pieceModel).isMultiPartResource()
           || !(pieceModel instanceof ResourceURLContent)
@@ -391,12 +352,12 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         String jarEntryName = ((URLContent)pieceModel).getJAREntryName();
         modelContentEntryName = getContentEntry(pieceModel,
             pieceModel instanceof TemporaryURLContent
-                ? contentBaseName + "/" + jarEntryName 
-                : contentBaseName + "/" + jarEntryName.substring(jarEntryName.lastIndexOf('/') + 1),  
+                ? piece.getName() + "/" + jarEntryName 
+                : piece.getName() + "/" + jarEntryName.substring(jarEntryName.lastIndexOf('/') + 1),  
             keepURLContentUnchanged, existingEntryNames);
       } else {
         modelContentEntryName = getContentEntry(pieceModel, 
-            contentBaseName + ".obj", keepURLContentUnchanged, existingEntryNames);
+            piece.getName() + ".obj", keepURLContentUnchanged, existingEntryNames);
       }
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.MODEL, i, 
           getContentProperty(pieceModel, modelContentEntryName, offlineFurnitureLibrary, 
@@ -460,33 +421,22 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
           String lightSourceY = "";
           String lightSourceZ = "";
           String lightSourceColor = "";
-          String lightSourceDiameter = null;
           for (int lightIndex = 0; lightIndex < lightSources.length; lightIndex++) {
             if (lightIndex > 0) {
               lightSourceX += " ";
               lightSourceY += " ";
               lightSourceZ += " ";
               lightSourceColor += " ";
-              if (lightSourceDiameter != null) {
-                lightSourceDiameter += " ";
-              }
             }
             lightSourceX += lightSources [lightIndex].getX() * light.getWidth();
             lightSourceY += lightSources [lightIndex].getY() * light.getDepth();
             lightSourceZ += lightSources [lightIndex].getZ() * light.getHeight();
             lightSourceColor += "#" + Integer.toHexString(lightSources [lightIndex].getColor());
-            if (lightSources [lightIndex].getDiameter() != null) {
-              if (lightSourceDiameter == null) {
-                lightSourceDiameter = "";
-              }
-              lightSourceDiameter += lightSources [lightIndex].getDiameter() * light.getWidth();
-            }
           }          
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_X, i, lightSourceX);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_Y, i, lightSourceY);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_Z, i, lightSourceZ);
           writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_COLOR, i, lightSourceColor);
-          writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_DIAMETER, i, lightSourceDiameter);
         }
       }
       if (piece.getElevation() > 0) {
@@ -494,14 +444,11 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       }
       float [][] modelRotation = piece.getModelRotation();
       String modelRotationString = 
-          floatToString(modelRotation[0][0]) + " " + floatToString(modelRotation[0][1]) + " " + floatToString(modelRotation[0][2]) + " "
-        + floatToString(modelRotation[1][0]) + " " + floatToString(modelRotation[1][1]) + " " + floatToString(modelRotation[1][2]) + " "
-        + floatToString(modelRotation[2][0]) + " " + floatToString(modelRotation[2][1]) + " " + floatToString(modelRotation[2][2]);
+          Math.round(modelRotation[0][0]) + " " + Math.round(modelRotation[0][1]) + " " + Math.round(modelRotation[0][2]) + " "
+        + Math.round(modelRotation[1][0]) + " " + Math.round(modelRotation[1][1]) + " " + Math.round(modelRotation[1][2]) + " "
+        + Math.round(modelRotation[2][0]) + " " + Math.round(modelRotation[2][1]) + " " + Math.round(modelRotation[2][2]);
       if (!"1 0 0 0 1 0 0 0 1".equals(modelRotationString)) {
         writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.MODEL_ROTATION, i, modelRotationString);
-      }
-      if (piece.getStaircaseCutOutShape() != null) {
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.STAIRCASE_CUT_OUT_SHAPE, i, piece.getStaircaseCutOutShape());
       }
       if (!piece.isResizable()) {
         writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.RESIZABLE, i, piece.isResizable());
@@ -509,31 +456,12 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
       if (!piece.isDeformable()) {
         writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.DEFORMABLE, i, piece.isDeformable());
       }
-      if (!piece.isTexturable()) {
-        writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.TEXTURABLE, i, piece.isTexturable());
-      }
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.PRICE, i, piece.getPrice());
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.VALUE_ADDED_TAX_PERCENTAGE, i, piece.getValueAddedTaxPercentage());
-      writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.CURRENCY, i, piece.getCurrency());
       writeProperty(writer, DefaultFurnitureCatalog.PropertyKey.CREATOR, i, piece.getCreator());
       i++;
     }
     writer.flush();
-  }
-  
-  /**
-   * Returns the string value of the given float, except for -1.0, 1.0 or 0.0 where -1, 1 and 0 is returned.
-   */
-  private String floatToString(float f) {
-    if (Math.abs(f) < 1E-6) {
-      return "0";
-    } else if (Math.abs(f - 1f) < 1E-6) {
-      return "1";
-    } else if (Math.abs(f + 1f) < 1E-6) {
-      return "-1";
-    } else {
-      return String.valueOf(f);
-    }
   }
     
   /**

@@ -1,7 +1,7 @@
 /*
  * ImportFurnitureTaskPanel.java 13 janv. 2010
  *
- * Furniture Library Editor, Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2010 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -194,7 +194,7 @@ public class ImportFurnitureTaskPanel extends ThreadedTaskPanel implements Impor
         size.x, size.z, size.y, 0f, true, null, this.preferences.getDefaultCreator(), true, null, null);
     FurnitureCategory defaultCategory = new FurnitureCategory(
         this.preferences.getLocalizedString(ImportFurnitureTaskPanel.class, "defaultCategory"));
-    new FurnitureCatalog().add(defaultCategory , piece);
+    new FurnitureCatalog() { }.add(defaultCategory , piece);
     return piece;
   }
   
@@ -217,10 +217,6 @@ public class ImportFurnitureTaskPanel extends ThreadedTaskPanel implements Impor
       }
       // Decode file name (replace %.. values)
       objFile = URLDecoder.decode(objFile.replace("+", "%2B"), "UTF-8");
-      // Ensure the file contains only letters, figures, underscores, dots, hyphens or spaces
-      if (objFile.matches(".*[^a-zA-Z0-9_\\.\\-\\ ].*")) {
-        objFile = "model.obj";
-      }
     } else {
       objFile = "model.obj";
     }
