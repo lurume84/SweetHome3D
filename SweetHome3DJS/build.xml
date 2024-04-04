@@ -16,9 +16,9 @@
 -->
 <project basedir="." default="viewerBuild" name="SweetHome3DJS">
   <!-- The current version of Sweet Home 3D JS -->
-  <property name="version" value="7.2"/>
+  <property name="version" value="7.3"/>
   <!-- The version of Sweet Home 3D on which Sweet Home 3D JS is based -->
-  <property name="SweetHome3D-version" value="7.2"/>
+  <property name="SweetHome3D-version" value="7.3"/>
   <!-- The version of JSweet transpiler (use version 3.1.0 to compile with Java 11) -->
   <property name="jsweet-version" value="3.2.0-SNAPSHOT"/>
 
@@ -407,7 +407,7 @@
       <filterchain>
         <headfilter lines="19" />
         <tokenfilter>
-          <replacestring from="viewHome.js" to="viewhome.min.js  version ${version}a" />
+          <replacestring from="viewHome.js" to="viewhome.min.js  version ${version}" />
         </tokenfilter>
       </filterchain>
       <file file="dist/build/viewhome.min.js" />
@@ -553,7 +553,7 @@
     <echo message="install/SweetHome3DJSViewer-${version}.zip ready"/>
   </target>
 
-  <property name="debug" value="false" />
+  <property name="debug" value="true" />
   <target name="applicationJspDeploy"
           description="Copies server files in deployIncrementalHomeRecorder directory">
     <echo>WARNING: run 'applicationDistribution' task if source elements have been modified</echo>

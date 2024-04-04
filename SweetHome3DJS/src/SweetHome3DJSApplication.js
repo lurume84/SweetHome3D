@@ -613,7 +613,7 @@ SweetHome3DJSApplication.prototype = Object.create(HomeApplication.prototype);
 SweetHome3DJSApplication.prototype.constructor = SweetHome3DJSApplication;
 
 SweetHome3DJSApplication.prototype.getVersion = function() {
-  return "7.2a";
+  return "7.3";
 }
 
 SweetHome3DJSApplication.prototype.getHomeRecorder = function() {
