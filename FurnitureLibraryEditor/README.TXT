@@ -1,18 +1,18 @@
-FURNITURE LIBRARY EDITOR v 2.0
+FURNITURE LIBRARY EDITOR v 2.1
 ------------------------------
 
 This archive contains source code of the Furniture Library Editor for Sweet Home 3D.
 
 You may also download this source code with the following SVN command:
 
-svn checkout https://svn.code.sf.net/p/sweethome3d/code/tags/V_2_0/FurnitureLibraryEditor FurnitureLibraryEditor
+svn checkout https://svn.code.sf.net/p/sweethome3d/code/tags/V_2_1/FurnitureLibraryEditor FurnitureLibraryEditor
 
 
 As this project depends on Sweet Home 3D, download and install also Sweet Home 3D source code from 
-http://prdownloads.sourceforge.net/sweethome3d/SweetHome3D-7.2-src.zip 
+http://prdownloads.sourceforge.net/sweethome3d/SweetHome3D-7.3-src.zip 
 or with the following SVN command: 
 
-svn checkout https://svn.code.sf.net/p/sweethome3d/code/tags/V_7_2/SweetHome3D SweetHome3D
+svn checkout https://svn.code.sf.net/p/sweethome3d/code/tags/V_7_3/SweetHome3D SweetHome3D
 
 
 HOW TO USE THIS SOURCE CODE
@@ -61,4 +61,4 @@ Read LICENSE.TXT file for more details about licenses applicable to this softwar
 and included materials developed by third parties.
     
     
-Copyright (c) 2010-2023 Emmanuel Puybaret / eTeks. Distributed under GNU General Public License    
+Copyright (c) 2010-2024 Emmanuel Puybaret / eTeks. Distributed under GNU General Public License    
