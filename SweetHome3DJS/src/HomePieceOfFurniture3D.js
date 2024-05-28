@@ -147,7 +147,7 @@ HomePieceOfFurniture3D.prototype.update = function() {
 HomePieceOfFurniture3D.prototype.updatePieceOfFurnitureTransform = function() {
   var transformGroup = this.getChild(0); 
   var pieceTransform = ModelManager.getInstance().getPieceOfFurnitureNormalizedModelTransformation(
-      this.getUserData(), transformGroup.getChild(0));
+      this.getUserData(), transformGroup.getChild(0).getChild(0));
   // Change model transformation      
   transformGroup.setTransform(pieceTransform);
 }
