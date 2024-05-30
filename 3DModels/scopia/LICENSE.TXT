@@ -22,7 +22,7 @@ Under the following terms:
 	Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
 
 
-(C) Copyrights 2014-2023 Emmanuel PUYBARET / eTeks <info@eteks.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
+(C) Copyrights 2014-2024 Emmanuel PUYBARET / eTeks <info@eteks.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 
 for the icons and the 265 following models:
 - 4x4
@@ -397,6 +397,6 @@ for the icons and the 265 following models:
 - yamaha-yzr-r6 
 
 
-(C) Copyrights 2006-2023 Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
+(C) Copyrights 2006-2024 Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 
 for all the other models
