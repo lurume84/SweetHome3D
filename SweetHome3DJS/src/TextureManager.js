@@ -197,7 +197,22 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
       textureImage.removeEventListener("load", imageLoadingListener);
       textureImage.removeEventListener("error", imageErrorListener);
       loadingTextureObserver.progression(TextureManager.READING_TEXTURE, url, 1);
-      loadingTextureObserver.textureLoaded(textureImage);
+      
+      if (textureImage.transparent === undefined) {
+        var request = new XMLHttpRequest();
+        request.open("GET", url, synchronous);
+        request.responseType = "arraybuffer";
+        request.addEventListener("load", function() {
+            if (request.readyState === XMLHttpRequest.DONE 
+                && (request.status === 0 || request.status === 200)) {
+              textureImage.transparent = ZIPTools.isTransparentImage(new Uint8Array(request.response));
+            }
+            loadingTextureObserver.textureLoaded(textureImage);
+          });
+        request.send();
+      } else {
+        loadingTextureObserver.textureLoaded(textureImage);
+      }
     };
   if (url.indexOf("jar:") === 0) {
     var entrySeparatorIndex = url.indexOf("!/");
@@ -238,10 +253,7 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
     textureImage.src = url;
     if (textureImage.width !== 0) {
       // Image is already here
-      textureImage.removeEventListener("load", imageLoadingListener);
-      textureImage.removeEventListener("error", imageErrorListener);
-      loadingTextureObserver.progression(TextureManager.READING_TEXTURE, url, 1);
-      loadingTextureObserver.textureLoaded(textureImage);
+      imageLoadingListener();
     } 
   }
 }

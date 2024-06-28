@@ -1061,16 +1061,42 @@ ZIPTools.isPNGImage = function(imageData) {
 
 /**
  * Returns true if the given image data describes a transparent PNG file.
- * @param {string} imageData
+ * @param {string|Uint8Array} imageData
  * @package
  * @ignore
  */
 ZIPTools.isTransparentImage = function(imageData) {
-  return ZIPTools.isPNGImage(imageData)
-      && imageData.length > 26
-      && (imageData.charAt(25).charCodeAt(0) === 4
+  if (ZIPTools.isPNGImage(imageData)
+      && imageData.length > 26) {
+    if (typeof imageData === "string") {
+      return (imageData.charAt(25).charCodeAt(0) === 4
           || imageData.charAt(25).charCodeAt(0) === 6
           || (imageData.indexOf("PLTE") !== -1 && imageData.indexOf("tRNS") !== -1));
+    } else {
+      if (imageData [25] === 4
+          || imageData [25] === 6) {
+        return true;
+      } else {
+        // Search if imageData contains PLTE and tRNS
+        for (var i = 0; i < imageData.length; i++) {
+          if (imageData [i] === 0x50
+              && imageData [i + 1] === 0x4C
+              && imageData [i + 2] === 0x54
+              && imageData [i + 3] === 0x45) {
+            for (var j = 0; j < imageData.length; j++) {
+              if (imageData [j] === 0x74
+                  && imageData [j + 1] === 0x52
+                  && imageData [j + 2] === 0x4E
+                  && imageData [j + 3] === 0x53) {
+                return true;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
 
 /**
