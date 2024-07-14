@@ -670,7 +670,10 @@ public class FurnitureLibraryFileRecorder implements FurnitureLibraryRecorder {
         }
         String [] lightSourceMaterialNames = light.getLightSourceMaterialNames();
         if (lightSourceMaterialNames.length > 0) {
-          writeProperty(writer, jsonExport, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_MATERIAL_NAME, i, lightSourceMaterialNames);
+          String materialNames = Arrays.toString(lightSourceMaterialNames);
+          // Write material names without brackets and commas
+          writeProperty(writer, jsonExport, DefaultFurnitureCatalog.PropertyKey.LIGHT_SOURCE_MATERIAL_NAME, i,
+              materialNames.substring(1, materialNames.length() - 1).replace(",", ""));
         }
       }
       if (piece.getElevation() > 0) {

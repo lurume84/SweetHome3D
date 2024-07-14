@@ -518,7 +518,7 @@ public class FurnitureController implements Controller {
                 case LIGHT_SOURCE_MATERIAL_NAME:
                   if (firstPiece instanceof Light) {
                     String materialNames = Arrays.toString(((Light)firstPiece).getLightSourceMaterialNames());
-                    propertyValue = materialNames.substring(1, materialNames.length() - 1); // Remove brackets
+                    propertyValue = materialNames.substring(1, materialNames.length() - 1).replace(",", ""); // Remove brackets and commas
                   }
                   break;
                 case SHELF_ELEVATIONS:
