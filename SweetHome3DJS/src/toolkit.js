@@ -1735,7 +1735,7 @@ JSComboBox.prototype.closeSelectionPanel = function() {
 /**
  * Closes currently displayed selection panel if any.
  * @static
- * @ignored
+ * @ignore
  */
 JSComboBox.closeOpenedSelectionPanel= function() {
   if (JSComboBox.current != null) {

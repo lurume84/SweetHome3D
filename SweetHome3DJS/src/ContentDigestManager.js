@@ -100,7 +100,7 @@ ContentDigestManager.prototype.getPermanentContentDigest = function(content) {
  * Returns asynchronously the SHA-1 digest of the given content.
  * @param {URLContent} content
  * @param {digestReady: function, digestError: function} digestObserver
- * @ignored
+ * @ignore
  */
 ContentDigestManager.prototype.getContentDigest = function(content, digestObserver) {
   var contentDigest = this.contentDigestsCache [content.getURL()];

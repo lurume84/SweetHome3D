@@ -658,7 +658,7 @@ ModelPreviewComponent.prototype.setModelTransformations = function(transformatio
 
 /**
  * @param {Array} transformations
- * @ignored
+ * @ignore
  */
 ModelPreviewComponent.prototype.setPresetModelTransformations = function(transformations) {
   if (this.previewedPiece != null) {
@@ -687,7 +687,7 @@ ModelPreviewComponent.prototype.setPresetModelTransformations = function(transfo
 }
 
 /**
- * @ignored
+ * @ignore
  */
 ModelPreviewComponent.prototype.resetModelTransformations = function() {
   this.setPresetModelTransformations(null);

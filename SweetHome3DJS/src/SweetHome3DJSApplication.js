@@ -684,7 +684,7 @@ SweetHome3DJSApplication.prototype.getHomeController = function(home) {
  * property.
  * @constructor
  * @param {SweetHome3DJSApplication} application
- * @ignored
+ * @ignore
  * @author Emmanuel Puybaret
  */
 function AutoRecoveryManager(application) {
@@ -848,7 +848,7 @@ function AutoRecoveryManager(application) {
 
 /**
  * Saves now modified document in auto recovery.
- * @ignored
+ * @ignore
  */
 AutoRecoveryManager.prototype.saveRecoveredHomes = function() {
   var homes = this.application.getHomes();
@@ -873,7 +873,7 @@ AutoRecoveryManager.prototype.saveRecoveredHomes = function() {
 
 /**
  * Restarts the timer that regularly saves application homes.
- * @ignored
+ * @ignore
  */
 AutoRecoveryManager.prototype.restartTimer = function() {
   var manager = this;
@@ -891,7 +891,7 @@ AutoRecoveryManager.prototype.restartTimer = function() {
 
 /**
  * Restarts the timer that regularly saves application homes.
- * @ignored
+ * @ignore
  */
 AutoRecoveryManager.prototype.stopTimer = function() {
   if (this.timerIntervalId) {

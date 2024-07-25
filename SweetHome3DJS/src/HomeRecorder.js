@@ -632,7 +632,7 @@ HomeRecorder.prototype.writeHome = function(home, homeName, observer) {
  * @param {{homeSaved: function, homeError: function}} observer  The callbacks used to follow the export operation of the home.
  *           homeSaved will receive in its second parameter the data containing the saved home with the resources it needs.
  * @return {abort: function} a function that will abort writing operation if needed 
- * @ignored
+ * @ignore
  */
 HomeRecorder.prototype.writeHomeToZip = function(home, homeName, homeContents, savedContentNames, dataType, observer) {
   var homeClone = home.clone();
