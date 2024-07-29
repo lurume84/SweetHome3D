@@ -571,7 +571,7 @@ LengthUnit.INCH.getMinimumLength = function() {
 }
 
 LengthUnit.INCH.getMaximumLength = function() {
-  return LengthUnit.inchToCentimeter(99974.4); // 3280 ft
+  return LengthUnit.footToCentimeter(3280);
 }
 
 LengthUnit.INCH.getMaximumElevation = function() {
@@ -653,7 +653,7 @@ LengthUnit.INCH_FRACTION.getMinimumLength = function() {
 }
 
 LengthUnit.INCH_FRACTION.getMaximumLength = function() {
-  return LengthUnit.inchToCentimeter(99974.4); // 3280 ft
+  return LengthUnit.footToCentimeter(3280);
 }
 
 LengthUnit.INCH_FRACTION.getMaximumElevation = function() {
@@ -732,7 +732,7 @@ LengthUnit.INCH_DECIMALS.getMinimumLength = function() {
 }
 
 LengthUnit.INCH_DECIMALS.getMaximumLength = function() {
-  return LengthUnit.inchToCentimeter(99974.4); // 3280 ft
+  return LengthUnit.footToCentimeter(3280);
 }
 
 LengthUnit.INCH_DECIMALS.getMaximumElevation = function() {
