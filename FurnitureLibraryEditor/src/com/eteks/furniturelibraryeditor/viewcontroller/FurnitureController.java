@@ -1913,7 +1913,7 @@ public class FurnitureController implements Controller {
         String sashWidthsString = (String)additionalProperties.remove(new FurnitureProperty(DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_SASH_WIDTH.getKeyPrefix()));
         String sashStartAnglesString = (String)additionalProperties.remove(new FurnitureProperty(DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_SASH_START_ANGLE.getKeyPrefix()));
         String sashEndAnglesString = (String)additionalProperties.remove(new FurnitureProperty(DefaultFurnitureCatalog.PropertyKey.DOOR_OR_WINDOW_SASH_END_ANGLE.getKeyPrefix()));
-        float doorOrWindowWallThickness = 0;
+        float doorOrWindowWallThickness = 1;
         float doorOrWindowWallDistance = 0;
         boolean doorOrWindowWallCutOutOnBothSides = true;
         boolean doorOrWindowWidthDepthDeformable = false;
