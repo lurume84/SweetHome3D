@@ -230,7 +230,12 @@ Ground3D.prototype.updateGround = function(waitTextureLoadingEnd, backgroundImag
   }
   
   undergroundAreas.sort(function (levelAreas1, levelAreas2) {
-      return -(levelAreas1.level.getElevation() - levelAreas2.level.getElevation());
+      var elevationComparison = -(levelAreas1.level.getElevation() - levelAreas2.level.getElevation());
+      if (elevationComparison !== 0) {
+        return elevationComparison;
+      } else {
+        return levelAreas1.level.getElevationIndex() - levelAreas2.level.getElevationIndex();
+      }
     });
   for (var i = 0; i < undergroundAreas.length; i++) {
     var levelAreas = undergroundAreas[i];

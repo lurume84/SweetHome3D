@@ -2252,7 +2252,8 @@ HomeComponent3D.prototype.addLevelListener = function(group) {
         }
         component3D.updateObjects(updatedItems);          
         component3D.groundChangeListener(null);
-      } else if ("ELEVATION" == propertyName) {
+      } else if ("ELEVATION" == propertyName
+                 || "ELEVATION_INDEX" == propertyName) {
         component3D.updateObjects(component3D.homeObjects.slice(0));          
         component3D.groundChangeListener(null);
       } else if ("BACKGROUND_IMAGE" == propertyName) {
