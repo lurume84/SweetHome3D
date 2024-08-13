@@ -60,4 +60,4 @@ For your information, a SH3F file is a ZIP file containing some 3D models files 
 Read LICENSE.TXT file for more details about licenses applicable to the 3D models contained in the SH3F file.
 
     
-(C) 2006-2024 Emmanuel Puybaret / eTeks and others
+(C) 2024 Space Mushrooms and others

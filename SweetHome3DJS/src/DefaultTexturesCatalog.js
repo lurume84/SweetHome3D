@@ -1,5 +1,5 @@
 /*
- * Sweet Home 3D, Copyright (c) 2017-2020 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Sweet Home 3D, Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -255,7 +255,6 @@ DefaultTexturesCatalog.prototype.getKey = function(keyPrefix, textureIndex) {
  * The key for the height in centimeters of a texture (mandatory).
  * @property {DefaultTexturesCatalog.PropertyKey} CREATOR
  * The key for the creator of a texture (optional).
- * By default, creator is eTeks.
  * @class
  */
 DefaultTexturesCatalog.PropertyKey = {
@@ -297,7 +296,6 @@ DefaultTexturesCatalog.PropertyKey = {
   HEIGHT: "height",
   /**
    * The key for the creator of a texture (optional).
-   * By default, creator is eTeks.
    */
   CREATOR: "creator",
 

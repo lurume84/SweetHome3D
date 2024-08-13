@@ -35,6 +35,6 @@ Notices
         may limit how you use the material.
 
 
-(C) Copyrights 2014-2023 Emmanuel PUYBARET / eTeks <info@eteks.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
+(C) Copyright 2024 Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 	
         

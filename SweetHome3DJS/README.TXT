@@ -56,5 +56,5 @@ Read LICENSE.TXT file for more details about licenses applicable to this softwar
 and included materials developed by third parties.
     
     
-Sweet Home 3D, Copyright (c) 2016-2024 Emmanuel PUYBARET / eTeks. 
+Sweet Home 3D, Copyright (c) 2024 Space Mushrooms. 
 Distributed under GNU General Public License    

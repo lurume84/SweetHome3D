@@ -1,7 +1,7 @@
 /*
  * Triangulator.js
  * 
- * Copyright (c) 2016 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
  * 
  * Copyright (c) 2007 Sun Microsystems, Inc. All rights reserved.
  *

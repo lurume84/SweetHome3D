@@ -35,7 +35,7 @@ Notices
         may limit how you use the material.
 
 
-(C) Copyrights 2017 Ola-Kristian Hoff / eTeks <info@eteks.com>
+(C) Copyrights 2017 Ola-Kristian Hoff
 
 for the 33 following texture images:
 - alu_siding_greyscale2.png
@@ -73,6 +73,6 @@ for the 33 following texture images:
 - wallp_tomatoes.jpg
 
 
-(C) Copyrights 2014-2017 Emmanuel PUYBARET / eTeks <info@eteks.com>
+(C) Copyright 2024 Space Mushrooms <info@sweethome3d.com>
 
 for all the other texture images 

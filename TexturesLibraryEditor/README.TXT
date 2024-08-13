@@ -54,4 +54,4 @@ Read LICENSE.TXT file for more details about licenses applicable to this softwar
 and included materials developed by third parties.
     
     
-Copyright (c) 2012-2023 Emmanuel Puybaret / eTeks. Distributed under GNU General Public License
+Copyright (c) 2024 Space Mushrooms. Distributed under GNU General Public License

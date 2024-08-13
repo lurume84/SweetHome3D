@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!-- build.xml
 
-     Copyright (c) 2014-2023 Emmanuel PUYBARET / eTeks <info@eteks.com>. All Rights Reserved.
+     Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
      
      Ant build file. Available targets :
      - Textures : Builds *.sh3t files and include each of them in a .zip file for distribution

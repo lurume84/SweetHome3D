@@ -60,4 +60,4 @@ For your information, a SH3T file is a ZIP file containing some image files and 
 Read LICENSE.TXT file for more details about licenses applicable to the textures contained in the SH3T file.
 
     
-(C) 2014-2023 Emmanuel Puybaret / eTeks and others     
+(C) 2024 Space Mushrooms and others 

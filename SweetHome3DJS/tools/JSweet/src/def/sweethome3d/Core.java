@@ -1,7 +1,7 @@
 /*
  * Core.java
  *
- * Copyright (c) 2015 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
  *
  * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.

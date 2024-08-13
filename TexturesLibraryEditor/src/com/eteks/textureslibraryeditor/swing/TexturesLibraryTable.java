@@ -1,7 +1,7 @@
 /*
  * TexturesLibraryTable.java 11 sept 2012
  *
- * Textures Library Editor, Copyright (c) 2012 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Textures Library Editor, Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

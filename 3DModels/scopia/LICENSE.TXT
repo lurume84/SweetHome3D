@@ -18,11 +18,11 @@ Under the following terms:
 	
 	Attribution: If you want distribute this work, or
 	derivates, you must attribute it to  
-	Emmanuel PUYBARET / eTeks <info@eteks.com>  and
+	Space Mushrooms <info@sweethome3d.com>  and
 	Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es)
 
 
-(C) Copyrights 2014-2024 Emmanuel PUYBARET / eTeks <info@eteks.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
+(C) Copyright 2024 Space Mushrooms <info@sweethome3d.com> and Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 
 for the icons and the 370 following models:
 - 4x4
@@ -397,6 +397,6 @@ for the icons and the 370 following models:
 - yamaha-yzr-r6 
 
 
-(C) Copyrights 2006-2024 Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
+(C) Copyright 2006-2024 Scopia Visual Interfaces Systems, s.l. (http://www.scopia.es) 
 
 for all the other models

@@ -1,5 +1,5 @@
 /*
- * Sweet Home 3D, Copyright (c) 2017-2020 Emmanuel PUYBARET / eTeks <info@eteks.com>
+ * Sweet Home 3D, Copyright (c) 2024 Space Mushrooms <info@sweethome3d.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -842,7 +842,6 @@ DefaultFurnitureCatalog.prototype.getKey = function(keyPrefix, pieceIndex) {
  * that will orient it correctly.
  * @property {DefaultFurnitureCatalog.PropertyKey} CREATOR
  * The key for the creator of a piece of furniture (optional).
- * By default, creator is eTeks.
  * @property {DefaultFurnitureCatalog.PropertyKey} RESIZABLE
  * The key for the resizability of a piece of furniture (optional, <code>true</code> by default).
  * If the value of this key is <code>false</code>, the piece of furniture
@@ -1113,7 +1112,6 @@ DefaultFurnitureCatalog.PropertyKey = {
   MODEL_ROTATION: "modelRotation",
   /**
    * The key for the creator of a piece of furniture (optional).
-   * By default, creator is eTeks.
    */
   CREATOR: "creator",
   /**
