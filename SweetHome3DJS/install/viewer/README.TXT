@@ -10,7 +10,7 @@ For local tests (including the HTML files found in this archive), be sure
 to disable local file restrictions in your browser if needed.
 
 Mouse and keyboard navigation are explained at 
-http://sweethome3d.cvs.sf.net/viewvc/sweethome3d/SweetHome3D/src/com/eteks/sweethome3d/viewcontroller/resources/help/en/editing3DView.html
+https://sourceforge.net/p/sweethome3d/code/HEAD/tree/trunk/SweetHome3D/src/com/eteks/sweethome3d/viewcontroller/resources/help/en/editing3DView.html
 Under touch devices like smartphones and tablets, you may navigate with your finger and pinching will zoom.
 
 
