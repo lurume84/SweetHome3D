@@ -201,11 +201,10 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
       if (textureImage.transparent === undefined) {
         var request = new XMLHttpRequest();
         request.open("GET", url, synchronous);
-        request.responseType = "arraybuffer";
         request.addEventListener("load", function() {
             if (request.readyState === XMLHttpRequest.DONE 
                 && (request.status === 0 || request.status === 200)) {
-              textureImage.transparent = ZIPTools.isTransparentImage(new Uint8Array(request.response));
+              textureImage.transparent = ZIPTools.isTransparentImage(request.response);
             }
             loadingTextureObserver.textureLoaded(textureImage);
           });
