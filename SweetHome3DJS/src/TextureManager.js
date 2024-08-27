@@ -200,7 +200,7 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
       
       if (textureImage.transparent === undefined) {
         var request = new XMLHttpRequest();
-        request.open("GET", url, synchronous);
+        request.open("GET", url, synchronous || url.indexOf("app://") >= 0); // Always synchronized under Cordova / iOS
         request.addEventListener("load", function() {
             if (request.readyState === XMLHttpRequest.DONE 
                 && (request.status === 0 || request.status === 200)) {
