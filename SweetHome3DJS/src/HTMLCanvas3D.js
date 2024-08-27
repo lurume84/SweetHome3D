@@ -1086,8 +1086,8 @@ HTMLCanvas3D.prototype.drawScene = function() {
     this.gl.uniform1i(this.shaderProgram.directionalLightCount, directionalLightCount);
     if (directionalLightCount < HTMLCanvas3D.MAX_DIRECTIONAL_LIGHT) {
       // Complete arrays to HTMLCanvas3D.MAX_DIRECTIONAL_LIGHT
-      directionalLightColors.push.apply(directionalLightColors, new Array((HTMLCanvas3D.MAX_DIRECTIONAL_LIGHT - directionalLightCount) * 3));
-      lightDirections.push.apply(lightDirections, new Array((HTMLCanvas3D.MAX_DIRECTIONAL_LIGHT - directionalLightCount) * 3));
+      directionalLightColors.push.apply(directionalLightColors, new Array((HTMLCanvas3D.MAX_DIRECTIONAL_LIGHT - directionalLightCount) * 3).fill(0));
+      lightDirections.push.apply(lightDirections, new Array((HTMLCanvas3D.MAX_DIRECTIONAL_LIGHT - directionalLightCount) * 3).fill(0));
     }
     this.gl.uniform3fv(this.shaderProgram.directionalLightColors, directionalLightColors);
     this.gl.uniform3fv(this.shaderProgram.lightDirections, lightDirections);
