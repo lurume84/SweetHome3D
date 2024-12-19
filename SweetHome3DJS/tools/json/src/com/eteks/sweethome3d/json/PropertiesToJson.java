@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -201,8 +202,8 @@ public class PropertiesToJson {
     } else {
       if (propertyFileBaseName.endsWith("FurnitureCatalog")) {
         // Copy icon#, planIcon# images and create a .zip file containing the file pointed by model# property
-        updateImageEntries(properties, sourceRoot, "icon#", resourcesOutputDirectory, resourcesRelativeDirectory, copyResources);
-        updateImageEntries(properties, sourceRoot, "planIcon#", resourcesOutputDirectory, resourcesRelativeDirectory, copyResources);
+        updateImageEntries(properties, sourceRoot, "icon#", "iconDigest#", resourcesOutputDirectory, resourcesRelativeDirectory, copyResources);
+        updateImageEntries(properties, sourceRoot, "planIcon#", "planIconDigest#", resourcesOutputDirectory, resourcesRelativeDirectory, copyResources);
 
         for (Entry<Object, Object> entry : ((Properties)properties.clone()).entrySet()) {
           String key = (String)entry.getKey();
@@ -224,8 +225,8 @@ public class PropertiesToJson {
             Path modelFolder = modelPath.getParent();
             if (copyResources) {
               new File(resourcesOutputDirectory).mkdirs();
-              ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(
-                  new File(resourcesOutputDirectory, URLDecoder.decode(zipModelFile, "UTF-8"))));
+              File resourceFile = new File(resourcesOutputDirectory, URLDecoder.decode(zipModelFile, "UTF-8"));
+              ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(resourceFile));
               if (Boolean.parseBoolean(properties.getProperty("multiPartModel#" + index))) {
                 // Include multiPart files in same folder
                 Files.walkFileTree(modelFolder,
@@ -245,9 +246,10 @@ public class PropertiesToJson {
                 zipOutputStream.closeEntry();
               }
               zipOutputStream.close();
+              updateDigest(properties, "modelDigest#" + index, new URL("jar:" + resourceFile.toURI().toURL() + "!/" + modelFile));
             }
 
-            String modelSizeKey = "modelSize#" + key.substring(key.indexOf('#') + 1);
+            String modelSizeKey = "modelSize#" + index;
             if (properties.getProperty(modelSizeKey) == null) {
               AtomicLong size = new AtomicLong();
               if (Boolean.parseBoolean(properties.getProperty("multiPartModel#" + index))) {
@@ -274,23 +276,25 @@ public class PropertiesToJson {
           }
         }
       } else if (propertyFileBaseName.endsWith("TexturesCatalog")) {
-        updateImageEntries(properties, sourceRoot, "image#", resourcesOutputDirectory, resourcesRelativeDirectory, copyResources);
+        updateImageEntries(properties, sourceRoot, "image#", "imageDigest#", resourcesOutputDirectory, resourcesRelativeDirectory, copyResources);
       }
     }
   }
 
-  private static void updateImageEntries(Properties properties, String sourceRoot, String imagePrefix,
+  private static void updateImageEntries(Properties properties, String sourceRoot, String imagePrefix, String imageDigestKey,
                                          String resourcesOutputDirectory, String resourcesRelativeDirectory,
                                          boolean copyResources) throws IOException {
     for (Entry<Object, Object> entry : properties.entrySet()) {
       String key = (String)entry.getKey();
       if (key.startsWith(imagePrefix)) {
+        int index = Integer.parseInt(key.substring(imagePrefix.length()));
         String currentPath = properties.getProperty(key);
         String image = currentPath.substring(currentPath.lastIndexOf("/") + 1);
         String newPath = (resourcesOutputDirectory.length() > 0  ? resourcesOutputDirectory + "/"  : "") + image;
         if (copyResources) {
           new File(resourcesOutputDirectory).mkdirs();
           Files.copy(Paths.get(sourceRoot, currentPath), Paths.get(newPath), StandardCopyOption.REPLACE_EXISTING);
+          updateDigest(properties,imageDigestKey + index, Paths.get(newPath).toUri().toURL());
         }
 
         entry.setValue(resourcesRelativeDirectory != null
@@ -299,4 +303,26 @@ public class PropertiesToJson {
       }
     }
   }
+
+  private static void updateDigest(Properties properties, String contentDigestKey, URL contentUrl) {
+    try {
+      Class<?> contentDigestManagerClass = Class.forName("com.eteks.sweethome3d.io.ContentDigestManager");
+      Class<?> contentClass = Class.forName("com.eteks.sweethome3d.model.Content");
+      Class<?> urlContentClass = Class.forName("com.eteks.sweethome3d.tools.URLContent");
+      Object contentDigest =
+          // Get digest by reflection to avoid being obliged to provide SweetHome3D.jar in classpath
+          // Base64.encodeBytes(ContentDigestManager.getInstance().getContentDigest(new URLContent(contentUrl)));
+          Class.forName("com.eteks.sweethome3d.io.Base64").getMethod("encodeBytes", byte[].class).invoke(null,
+              contentDigestManagerClass.getMethod("getContentDigest", contentClass).invoke(
+                  contentDigestManagerClass.getMethod("getInstance").invoke(null),
+                  urlContentClass.getConstructor(URL.class).newInstance(contentUrl)));
+      properties.put(contentDigestKey, contentDigest);
+    } catch (ReflectiveOperationException ex) {
+      // Don't generate digest if SweetHome3D classes are not provided
+      System.out.println("Warning: Provide SweetHome3D classes in classpath if you need to generate content digests");
+    }
+  }
 }
+
+
+
