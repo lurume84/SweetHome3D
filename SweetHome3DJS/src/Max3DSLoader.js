@@ -965,6 +965,9 @@ Max3DSLoader.prototype.parseTextureMap = function(input, max3dsEntryName, zip) {
       mapName = max3dsEntryName.substring(0, lastSlash + 1) + mapName;
     }
     var imageEntry = zip.file(mapName);
+    if (imageEntry == null) {
+      imageEntry = zip.file("/" + mapName);
+    }
     if (imageEntry !== null) {
       return mapName;
     } else {

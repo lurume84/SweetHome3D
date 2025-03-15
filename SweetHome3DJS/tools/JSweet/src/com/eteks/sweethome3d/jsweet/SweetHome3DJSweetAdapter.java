@@ -282,12 +282,17 @@ public class SweetHome3DJSweetAdapter extends PrinterAdapter {
     // Replace some Java implementations with some JavaScript-specific implementations
 
     // Manage content without contentContext
+    // homeUrl is set in HomeRecorder.js
     addAnnotation(
         "@Replace('var contentFile = attributes[attributeName];"
         + "        if (contentFile === undefined) { "
         + "          return null;"
         + "        } else if (contentFile.indexOf('://') >= 0) {"
-        + "          return URLContent.fromURL(contentFile);"
+        + "          if (contentFile.indexOf('jar:') === 0 && 'texture' == elementName && 'image' == attributeName) {"
+        + "            return new SimpleURLContent(contentFile);"
+        + "          } else { "
+        + "            return URLContent.fromURL(contentFile);"
+        + "          }"
         + "        } else { "
         + "          return new HomeURLContent('jar:' + this['homeUrl'] + '!/' + contentFile); "
         + "        }')",
@@ -525,6 +530,13 @@ public class SweetHome3DJSweetAdapter extends PrinterAdapter {
               return true;
           }
           break;
+        case "java.lang.Boolean":
+          switch (invocation.getMethodName()) {
+            case "parseBoolean":
+              print("'true' == ").print(invocation.getArgument(0));
+              return true;
+          }
+          break;
         case "java.util.Currency":
           switch (invocation.getMethodName()) {
             case "getDefaultFractionDigits":
@@ -555,6 +567,9 @@ public class SweetHome3DJSweetAdapter extends PrinterAdapter {
             case "getProperty":
               if (invocation.getArgument(0).toString().equals("\"com.eteks.sweethome3d.deploymentInformation\"")) {
                 print("'JS'");
+                return true;
+              } else if (invocation.getArgument(0).toString().equals("\"com.eteks.sweethome3d.onlineRecorderEnabled\"")) {
+                print ("'true'");
                 return true;
               }
           }

@@ -201,12 +201,15 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
       if (textureImage.transparent === undefined) {
         var request = new XMLHttpRequest();
         request.open("GET", url, synchronous || url.indexOf("app://") >= 0); // Always synchronized under Cordova / iOS
+        request.withCredentials = true;
         request.addEventListener("load", function() {
             if (request.readyState === XMLHttpRequest.DONE 
                 && (request.status === 0 || request.status === 200)) {
               textureImage.transparent = ZIPTools.isTransparentImage(request.response);
+              loadingTextureObserver.textureLoaded(textureImage);
+            } else {
+              loadingTextureObserver.textureError(request.status);
             }
-            loadingTextureObserver.textureLoaded(textureImage);
           });
         request.send();
       } else {
@@ -248,12 +251,48 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
   } else {
     textureImage.addEventListener("load", imageLoadingListener);
     textureImage.addEventListener("error", imageErrorListener);
-    // Prepare download
-    textureImage.src = url;
-    if (textureImage.width !== 0) {
-      // Image is already here
-      imageLoadingListener();
-    } 
+    if (this.scriptServer === undefined) {
+      var scriptFolder = ZIPTools.getScriptFolder();
+      var folderIndex = scriptFolder.indexOf('/', scriptFolder.indexOf("://") + 1);
+      this.scriptServer = folderIndex < 0 ? scriptFolder : scriptFolder.substring(0, folderIndex); 
+    }
+    if (url.indexOf(this.scriptServer) === 0
+        || url.indexOf("blob:") === 0) {
+      // Prepare download
+      textureImage.src = url;
+      if (textureImage.width !== 0) {
+        // Image is already here
+        imageLoadingListener();
+      } 
+    } else {
+      // If image is hosted on a server different from application's one
+      // download with XHR to ensure credentials are set and avoid CORS issue
+      var request = new XMLHttpRequest();
+      request.open("GET", url, synchronous);
+      request.responseType = "blob";
+      request.withCredentials = true;
+      request.addEventListener("load", function() {
+          if (request.readyState === XMLHttpRequest.DONE 
+              && (request.status === 0 || request.status === 200)) {
+            var reader = new FileReader();
+            // Use onload and onerror rather that addEventListener for Cordova support
+            reader.onload = function(ev) {
+                textureImage.transparent = ZIPTools.isTransparentImage(ev.target.result);
+                textureImage.src = URL.createObjectURL(request.response);
+                // If image is already here or if image loading must be synchronous 
+                if (textureImage.width !== 0
+                    || synchronous) {
+                  imageLoadingListener();
+                }
+              };
+            reader.onerror = imageErrorListener;
+            reader.readAsBinaryString(request.response);            
+          } else {
+            imageErrorListener();
+          }
+        });
+      request.send();
+    }
   }
 }
 

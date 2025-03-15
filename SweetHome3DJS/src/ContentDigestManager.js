@@ -72,10 +72,14 @@ ContentDigestManager.prototype.equals = function(content1, content2) {
  * It should be used for permanent contents like the ones coming for preferences. 
  * @param {URLContent} content
  * @param {string} digest
+ * @param {boolean} [permanentContent] <code>true</code> by default
  */
-ContentDigestManager.prototype.setContentDigest = function(content, digest) {
+ContentDigestManager.prototype.setContentDigest = function(content, digest, permanentContent) {
   this.contentDigestsCache [content.getURL()] = digest;
-  this.permanentContents [digest] = content;
+  if ((permanentContent === undefined || permanentContent === true)
+      &&  this.permanentContents [digest] === undefined) {
+    this.permanentContents [digest] = content;
+  }
 }
 
 /**
@@ -146,9 +150,17 @@ ContentDigestManager.prototype.getZipContentDigest = function(content, digestObs
               : -1;
           var entryDirectory = entryName.substring(0, slashIndex + 1);
           var contentData = new Uint8Array(0);
-          var entries = slashIndex > 0 || !(content instanceof HomeURLContent) 
-              ? zip.file(new RegExp("^" + entryDirectory + ".*")).sort(function(entry1, entry2) { return entry1.name === entry2.name ? 0 : (entry1.name < entry2.name ? 1 : -1); }) // Reverse order
-              : [zip.file(entryName)];
+          var entries;
+          if ((slashIndex > 0 || !(content instanceof HomeURLContent) ) 
+              && !(content instanceof SimpleURLContent)) {
+            entries = zip.file(new RegExp("^" + entryDirectory + ".*")).sort(function(entry1, entry2) { return entry1.name === entry2.name ? 0 : (entry1.name < entry2.name ? 1 : -1); }) // Reverse order
+          } else {
+            var zipEntry = zip.file(entryName);
+            if (zipEntry == null) {
+              zipEntry = zip.file("/" + entryName);
+            }
+            entries = [zipEntry];
+          }
           
           for (var i = entries.length - 1; i >= 0 ; i--) {
             var zipEntry = entries [i];

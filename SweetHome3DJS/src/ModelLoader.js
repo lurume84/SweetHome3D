@@ -89,7 +89,11 @@ ModelLoader.prototype.load = function(url, synchronous, loadingModelObserver) {
               return;
             }
           }
-          loader.parseModelEntry(zip.file(decodeURIComponent(modelEntryName)), zip, url, synchronous, loadingModelObserver);
+          var modelEntry = zip.file(decodeURIComponent(modelEntryName));
+          if (modelEntry == null) {
+            modelEntry = zip.file(decodeURIComponent("/" + modelEntryName));
+          }
+          loader.parseModelEntry(modelEntry, zip, url, synchronous, loadingModelObserver);
         } catch (ex) {
           zipObserver.zipError(ex);
         }
@@ -206,6 +210,9 @@ ModelLoader.prototype.loadTextureImages = function(node, images, zip, zipUrl, sy
           
           var loader = function() {
             var imageEntry = zip.file(decodeURIComponent(imageEntryName));
+            if (imageEntry == null) {
+              imageEntry = zip.file(decodeURIComponent("/" + imageEntryName));
+            }
             if (imageEntry !== null) {
               var imageData = imageEntry.asBinary();
               var base64Image = btoa(imageData);

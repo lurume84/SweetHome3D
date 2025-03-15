@@ -198,7 +198,8 @@ DefaultTexturesCatalog.prototype.readTexturesCategory = function(resource, index
   var content = URLContent.fromURL(url);
   var contentDigest = this.getOptionalString(resource, contentDigestKey, null);
   if (contentDigest != null && contentDigest.length > 0) {
-    ContentDigestManager.getInstance().setContentDigest(content, contentDigest);
+    ContentDigestManager.getInstance().setContentDigest(content, contentDigest, 
+        this.getOptionalString(resource, "permanentDigest", "true").toLowerCase() === "true");
   }
   return content;
 }

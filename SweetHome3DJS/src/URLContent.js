@@ -66,7 +66,11 @@ URLContent.prototype.getURL = function() {
         || httpSchemeIndex !== -1) {
       var scripts = document.getElementsByTagName("script");
       if (scripts && scripts.length > 0) {
-        var scriptUrl = document.getElementsByTagName("script") [0].src;
+        var scriptUrl = ZIPTools.getScriptFolder();
+        // If script is not hosted on http server, give priority to https
+        if (scriptUrl.indexOf("http") !== 0) {
+          scriptUrl = "https://www.sweethome3d.com/";
+        }
         var scriptColonSlashIndex = scriptUrl.indexOf("://");
         var scriptScheme = scriptUrl.substring(0, scriptColonSlashIndex);
         var scheme = httpsSchemeIndex !== -1  ? "https"  : "http";

@@ -68,92 +68,208 @@ DirectHomeRecorder.prototype.readHome = function(homeName, observer) {
  * @return {abort: function} a function that will abort writing operation if needed 
  */
 DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
-  var localContents = [];
-  // Keep only local contents which have to be saved
-  this.searchContents(home, [], localContents, function(content) {
-      return content instanceof LocalURLContent
-          || (content.isJAREntry() && URLContent.fromURL(content.getJAREntryURL()) instanceof LocalURLContent);
-    });
-  
-  var abortableOperations = [];
   var recorder = this;
-  var contentsObserver = {
-      contentsSaved: function(savedContentNames) {
-        // Search contents included in home
-        var homeContents = []
-        recorder.searchContents(home, [], homeContents, function(content) {
-            return content instanceof HomeURLContent
-                || content instanceof SimpleURLContent;
-          });
-
-        var savedContentIndex = 0; 
-        for (var i = 0; i < homeContents.length; i++) {
-          var content = homeContents[i];
-          if (content instanceof HomeURLContent) {
-            var entry = content.getJAREntryName();
-            if (entry.indexOf('/') < 0) {
-              savedContentNames [content.getURL()] = (++savedContentIndex).toString();
-            } else {
-              savedContentNames [content.getURL()] = (++savedContentIndex) + entry.substring(entry.indexOf('/'));
-            }
-          } else if (content instanceof SimpleURLContent
-                     && content.isJAREntry()
-                     && URLContent.fromURL(content.getJAREntryURL()) instanceof LocalURLContent) {
-            savedContentNames [content.getURL()] = (++savedContentIndex).toString();
-          }
-        }
-
-        abortableOperations.push(recorder.writeHomeToZip(home, homeName, homeContents, savedContentNames, "blob", {
-            homeSaved: function(home, data) {
-              var content = new BlobURLContent(data);
-              var revokeOperation = {
-                  abort: function() {
-                    // Don't keep blob URL in document
-                    URL.revokeObjectURL(content.getURL());
-                  }
-                };
-              abortableOperations.push(
-                 content.writeBlob(recorder.configuration.writeHomeURL, homeName, 
-                   {
-                     blobSaved: function(content, name) {
-                       revokeOperation.abort();
-                       if (observer != null 
-                           && observer.homeSaved != null) {
-                         observer.homeSaved(home);
-                       }
-                     },
-                     blobError: function(status, error) {
-                       revokeOperation.abort();
-                       if (observer != null 
-                           && observer.homeError != null) {
-                         observer.homeError(status, error);
-                       }
-                     }
-                   }));
-              abortableOperations.push(revokeOperation);
-            },
-            homeError: function(status, error) {
-              if (observer != null 
-                  && observer.homeError != null) {
-                observer.homeError(status, error);
+  var onlineContentNames = {};
+  var abortableOperations = [];
+  var saveContentsAndWriteHome = function() {
+      // Keep only local contents which have to be saved
+      var localContents = [];
+      recorder.searchContents(home, [], localContents, function(content) {
+          return (content instanceof LocalURLContent
+                  || (content.isJAREntry() && URLContent.fromURL(content.getJAREntryURL()) instanceof LocalURLContent))
+              && onlineContentNames [content.getURL()] === undefined;
+        });
+    
+      var contentsObserver = {
+          contentsSaved: function(savedContentNames) {
+            CoreTools.merge(savedContentNames, onlineContentNames);
+        
+            // Search contents included in home
+            var homeContents = []
+            recorder.searchContents(home, [], homeContents, function(content) {
+                return content instanceof HomeURLContent
+                    || content instanceof SimpleURLContent;
+              });
+    
+            var savedContentIndex = 0; 
+            for (var i = 0; i < homeContents.length; i++) {
+              var content = homeContents[i];
+              if (content instanceof HomeURLContent) {
+                var entry = content.getJAREntryName();
+                if (entry.indexOf('/') < 0) {
+                  savedContentNames [content.getURL()] = (++savedContentIndex).toString();
+                } else {
+                  savedContentNames [content.getURL()] = (++savedContentIndex) + entry.substring(entry.indexOf('/'));
+                }
+              } else if (content instanceof SimpleURLContent
+                         && content.isJAREntry()
+                         && URLContent.fromURL(content.getJAREntryURL()) instanceof LocalURLContent
+                         && savedContentNames [content.getURL()] == null) {
+                savedContentNames [content.getURL()] = (++savedContentIndex).toString();
               }
             }
-          }));    
-      },
-      contentsError: function(status, error) {
-        if (observer != null 
-            && observer.homeError != null) {
-          observer.homeError(status, error);
+    
+            abortableOperations.push(recorder.writeHomeToZip(home, homeName, homeContents, savedContentNames, "blob", {
+                homeSaved: function(home, data) {
+                  var content = new BlobURLContent(data);
+                  var revokeOperation = {
+                      abort: function() {
+                        // Don't keep blob URL in document
+                        URL.revokeObjectURL(content.getURL());
+                      }
+                    };
+                  abortableOperations.push(
+                     content.writeBlob(recorder.configuration.writeHomeURL, homeName, 
+                       {
+                         blobSaved: function(content, name) {
+                           revokeOperation.abort();
+                           if (observer != null 
+                               && observer.homeSaved != null) {
+                             observer.homeSaved(home);
+                           }
+                         },
+                         blobError: function(status, error) {
+                           revokeOperation.abort();
+                           if (observer != null 
+                               && observer.homeError != null) {
+                             observer.homeError(status, error);
+                           }
+                         }
+                       }));
+                  abortableOperations.push(revokeOperation);
+                },
+                homeError: function(status, error) {
+                  if (observer != null 
+                      && observer.homeError != null) {
+                    observer.homeError(status, error);
+                  }
+                }
+              }));    
+          },
+          contentsError: function(status, error) {
+            if (observer != null 
+                && observer.homeError != null) {
+              observer.homeError(status, error);
+            };
+          }
         };
+      
+      if (recorder.configuration.writeResourceURL !== undefined
+          && recorder.configuration.readResourceURL !== undefined) {
+        abortableOperations.push(recorder.saveContents(localContents, contentsObserver));
+      } else {
+        contentsObserver.contentsSaved({});
       }
     };
-  
-  if (this.configuration.writeResourceURL !== undefined
-      && this.configuration.readResourceURL !== undefined) {
-    abortableOperations.push(this.saveContents(localContents, contentsObserver));
+
+  if (this.configuration.onlineFurnitureCatalogURLs !== undefined
+      && this.configuration.onlineTexturesCatalogURLs !== undefined) {
+    // Retrieve onlineContents
+    if (this.onlineContents == null) {
+      var onlineFurnitureCatalog = new DefaultFurnitureCatalog(
+          this.configuration.onlineFurnitureCatalogURLs, this.configuration.onlineFurnitureResourcesURLBase);
+      var onlineTexturesCatalog = new DefaultTexturesCatalog(
+          this.configuration.onlineTexturesCatalogURLs, this.configuration.onlineTexturesResourcesURLBase);
+      this.onlineContents = this.getCatalogsContents(onlineFurnitureCatalog, onlineTexturesCatalog);
+      this.simpleContentNames = {};
+    }
+    // Check if duplicated content can be avoided among local content
+    var localContents = [];
+    this.searchContents(home, [], localContents, function(content) {
+        return !(content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0
+                 || !content.isJAREntry() && content.getURL().indexOf("http") === 0);
+      });
+    var contentDigestManager = ContentDigestManager.getInstance();
+    if (localContents.length > 0) {
+      var localContentsCopy = localContents.slice(0).reverse();
+      for (var i = localContentsCopy.length - 1; i >= 0; i--) {
+        var localContent = localContentsCopy[i];
+        contentDigestManager.getContentDigest(localContent, {
+            digestReady: function(content, digest) {
+              // Check if saving content can be avoided if it exists in online catalogs
+              for (var i = 0; i < recorder.onlineContents.length; i++) {
+                var onlineContent = recorder.onlineContents [i];
+                if (contentDigestManager.equals(content, onlineContent)) {
+                  onlineContentNames [content.getURL()] = onlineContent.getURL();
+                  break;
+                }
+              }
+
+              if (content instanceof SimpleURLContent 
+                  && recorder.simpleContentNames [content.getURL()] !== undefined) {
+                onlineContentNames [content.getURL()] = recorder.simpleContentNames [content.getURL()];
+              } 
+              
+              if (onlineContentNames [content.getURL()] !== undefined) {
+                localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
+              } else if (content instanceof SimpleURLContent) {
+                // Save SimpleURLContent (always a temporary jar content)
+                content.getStreamURL({
+                    content: content,
+                    urlReady: function(url) {
+                      var entrySeparatorIndex = url.indexOf("!/");
+                      var contentEntryName = decodeURIComponent(url.substring(entrySeparatorIndex + 2));
+                      var jarUrl = url.substring(4, entrySeparatorIndex);
+                      ZIPTools.getZIP(jarUrl, false, {
+                          content: this.content,
+                          zipReady : function(zip) {
+                            try {
+                              var contentEntry = zip.file(contentEntryName);
+                              if (contentEntry == null) {
+                                contentEntry = zip.file("/" + contentEntryName);
+                              }
+                              var entryData = contentEntry.asUint8Array();
+                              var contentFileName = UUID.randomUUID() + ".dat";
+                              var observer = {
+                                  handledContent: this.content,
+                                  blobSaved: function(content, contentFileName) {
+                                    var savedContent = URLContent.fromURL(
+                                        CoreTools.format(recorder.configuration.readResourceURL.replace(/(%[^s])/g, "%$1"), encodeURIComponent(contentFileName)));
+                                    onlineContentNames [this.handledContent.getURL()] = 
+                                    recorder.simpleContentNames [this.handledContent.getURL()] = savedContent.getURL();
+                                    localContentsCopy.splice(localContentsCopy.lastIndexOf(this.handledContent), 1);
+                                    if (localContentsCopy.length === 0) {
+                                      saveContentsAndWriteHome();
+                                    }
+                                  },
+                                  blobError: function(status, error) {
+                                    observer.homeError(status, error);
+                                  }
+                                };
+
+                              abortableOperations.push(BlobURLContent.fromBlob(new Blob([entryData])).
+                                  writeBlob(recorder.configuration.writeResourceURL, contentFileName, observer));
+                            } catch (ex) {
+                              observer.homeError(ex, ex.message);
+                            }
+                          },
+                          zipError : function(error) {
+                            observer.homeError(ex, ex.message);
+                          }
+                        });
+                    },
+                    urlError: function(status, error) {
+                      observer.homeError(ex, ex.message);
+                    }    
+                  });
+              }
+           
+              if (localContentsCopy.length === 0) {
+                saveContentsAndWriteHome();
+              }
+            },
+            digestError: function(status, error) {
+              observer.homeError(status, error);
+            }
+          });
+      }
+    } else {
+      saveContentsAndWriteHome();
+    }
   } else {
-    contentsObserver.contentsSaved({});
+    saveContentsAndWriteHome();
   }
+  
   return {
       abort: function() {
         for (var i = 0; i < abortableOperations.length; i++) {
@@ -161,6 +277,47 @@ DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
         }
       }
     };
+}
+
+/**
+ * Returns the contents referenced by the given catalogs.
+ * @param {FurnitureCatalog} furnitureCatalog
+ * @param {TexturesCatalog} texturesCatalog
+ * @private
+ */
+DirectHomeRecorder.prototype.getCatalogsContents = function(furnitureCatalog, texturesCatalog) {
+  var contents = [];
+  var categories = furnitureCatalog.getCategories();
+  for (var i = 0; i < categories.length; i++) {
+    var furniture = categories[i].getFurniture();
+    for (var j = 0; j < furniture.length; j++) {
+      var piece = furniture[j];
+      if (piece.getIcon() instanceof URLContent
+          && contents.indexOf(piece.getIcon()) < 0) {
+        contents.push(piece.getIcon());
+      }
+      if (piece.getModel() instanceof URLContent
+          && contents.indexOf(piece.getModel()) < 0) {
+        contents.push(piece.getModel());
+      }
+      if (piece.getPlanIcon() instanceof URLContent
+          && contents.indexOf(piece.getPlanIcon()) < 0) {
+        contents.push(piece.getPlanIcon());
+      }
+    }
+  }
+  categories = texturesCatalog.getCategories();
+  for (var i = 0; i < categories.length; i++) {
+    var textures = categories[i].getTextures();
+    for (var j = 0; j < textures.length; j++) {
+      var texture = textures[j];
+      if (texture.getImage() instanceof URLContent
+          && contents.indexOf(texture.getImage()) < 0) {
+        contents.push(texture.getImage());
+      }
+    }
+  }
+  return contents;
 }
 
 /**
@@ -394,7 +551,12 @@ DirectHomeRecorder.prototype.getAvailableHomes = function(observer) {
       request.addEventListener("load", function(ev) {
           if (request.readyState === XMLHttpRequest.DONE
               && request.status === 200) {
-            observer.availableHomes(JSON.parse(request.responseText));
+            try {
+              observer.availableHomes(JSON.parse(request.responseText));
+            } catch (ex) {
+              // If not at JSON format, consider a simple list of names 
+              observer.availableHomes(request.responseText.split('\n'));
+            }
           } else if (observer.homesError !== undefined) {
             observer.homesError(request.status, request.responseText);
           }

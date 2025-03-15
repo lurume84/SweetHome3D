@@ -549,6 +549,13 @@ class HomeURLContent {
   public native String getURL();
 }
 
+class SimpleURLContent {
+  public SimpleURLContent(String content) {
+  }
+
+  public native String getURL();
+}
+
 class LengthUnit {
     public static LengthUnit MILLIMETER;
     public static LengthUnit CENTIMETER;

@@ -72,7 +72,7 @@ HomeRecorder.prototype.readHome = function(url, observer) {
                 homeLoaded: function(home) {
                   recorder.replaceHomeContents(home, url, observer);
                 }, 
-                homeError: function(error){
+                homeError: function(error) {
                   if (observer.homeError !== undefined) {
                     observer.homeError(error);
                   }
@@ -339,7 +339,10 @@ HomeRecorder.prototype.replaceHomeContents = function(home, homeUrl, observer) {
 HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, observer) {
   var homeContents = [];
   this.searchContents(home, [], homeContents, function(content) {
-      return content instanceof HomeURLContent;
+      return content instanceof HomeURLContent
+          || content instanceof SimpleURLContent
+          || !content.isJAREntry() && content.getURL().indexOf("http") === 0
+          || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0;
     });
   // Compute digest for home contents
   if (homeContents.length > 0) {
@@ -354,22 +357,48 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
             if (homeContentsCopy.length === 0) {
               // Replace home contents by permanent contents which exist
               var permanentContents = [];
+              var getReplacingContent = function(content) {
+                    var replacingContent = contentDigestManager.getPermanentContentDigest(content);
+                    if (replacingContent.getURL().indexOf(".extract", replacingContent.getURL().length - ".extract".length) > 0) {
+                      replacingContent = URLContent.fromURL("jar:" + replacingContent.getURL() + "!/data");
+                      // Don't set savedContent because the entry of a http mono part is probably not data 
+                    } else {
+                      if (content instanceof HomeURLContent 
+                          && content.isJAREntry() 
+                          && content.getJAREntryName().indexOf('/') > 0
+                          && !replacingContent.isJAREntry()) {
+                        replacingContent = URLContent.fromURL("jar:" + replacingContent.getURL() + "!/" 
+                            + content.getJAREntryName().substring(content.getJAREntryName().indexOf('/') + 1));
+                      }
+                                  
+                      if (!content.isJAREntry() && content.getURL().indexOf("http") === 0
+                           || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0) {
+                        if (replacingContent instanceof LocalURLContent) {
+                          replacingContent.setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
+                        } else if (replacingContent.isJAREntry() && URLContent.fromURL(replacingContent.getJAREntryURL()) instanceof LocalURLContent) {
+                          URLContent.fromURL(replacingContent.getJAREntryURL()).setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
+                        }
+                      } 
+                    }
+                    return replacingContent;
+                  };
               recorder.searchContents(home, [], permanentContents, 
                   function(content) {
-                    return content instanceof HomeURLContent
+                    return (content instanceof HomeURLContent
+                            || content instanceof SimpleURLContent 
+                            || !content.isJAREntry() && content.getURL().indexOf("http") === 0
+                            || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0)
                         && contentDigestManager.getPermanentContentDigest(content) != null;
                   }, 
-                  function(content) {
-                    var permanentContent = contentDigestManager.getPermanentContentDigest(content);
-                    if (permanentContent.getURL().indexOf(".extract", permanentContent.getURL().length - ".extract".length) > 0) {
-                      return URLContent.fromURL("jar:" + permanentContent.getURL() + "!/data");
-                    } else if (content.isJAREntry() && content.getJAREntryName().indexOf('/') > 0 && !permanentContent.isJAREntry()) {
-                      return URLContent.fromURL("jar:" + permanentContent.getURL() + "!/" 
-                          + content.getJAREntryName().substring(content.getJAREntryName().indexOf('/') + 1));
-                    } else {
-                      return permanentContent;
-                    }
-                  });
+                  getReplacingContent);
+              var disposeZips = function() {
+                  ZIPTools.disposeZIP(homeUrl);
+                  for (var i = homeContents.length - 1; i >= 0; i--) {
+                     if (homeContents[i].isJAREntry() && content.getURL().indexOf("http") === 0) {
+                       ZIPTools.disposeZIP(homeContents[i].getJAREntryURL());
+                     }
+                   }
+                 };
  
               var remainingHomeContentCount = homeContents.length - permanentContents.length;
               if (remainingHomeContentCount > 0
@@ -380,16 +409,15 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                 var compressionLevel =  recorder.configuration.writeCacheResourceURL.indexOf(LocalStorageURLContent.LOCAL_STORAGE_PREFIX) < 0
                     && recorder.configuration.writeCacheResourceURL.indexOf(IndexedDBURLContent.INDEXED_DB_PREFIX) < 0  ? 5 : 0;
                   
-                var replaceContents = function() {
+                var replaceContentsStoredInCache = function() {
                     if (--remainingHomeContentCount === 0) {
-                      ZIPTools.disposeZIP(homeUrl);
+                      disposeZips();
                       recorder.searchContents(home, [], permanentContents, 
                           function(content) {
-                            return content instanceof HomeURLContent;
+                            return remainingHomeContents[content.getURL()] !== undefined;
                            }, 
                            function(content) {
-                             var replacingContent = remainingHomeContents[content.getURL()];
-                             return replacingContent !== undefined ? replacingContent : content;
+                             return remainingHomeContents[content.getURL()];
                            });
                       observer.homeLoaded(home);    
                     }
@@ -401,23 +429,38 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                     }
                     contentDigestManager.getContentDigest(homeContent, {
                         digestReady: function(content, digest) {
-                          new BlobURLContent(blob).writeBlob(recorder.configuration.writeCacheResourceURL, [blobName, digest], {
-                              blobSaved: function(content, blobName) {
-                                var url = CoreTools.format(recorder.configuration.readCacheResourceURL.replace(/(%[^s])/g, "%$1"), encodeURIComponent(blobName));
-                                if (blobContentEntryName != null) {
-                                  url = "jar:" + url + "!/" + blobContentEntryName;
+                          // Check again if content saved in blob wasn't stored before in cache
+                          var replacingContent = contentDigestManager.getPermanentContentDigest(homeContent);
+                          if (replacingContent != null) {
+                            remainingHomeContents [homeContent.getURL()] = getReplacingContent(homeContent);
+                            replaceContentsStoredInCache();
+                          } else {
+                            new BlobURLContent(blob).writeBlob(recorder.configuration.writeCacheResourceURL, [blobName, digest], {
+                                blobSaved: function(content, blobName) {
+                                  var url = CoreTools.format(recorder.configuration.readCacheResourceURL.replace(/(%[^s])/g, "%$1"), encodeURIComponent(blobName));
+                                  var cacheContent = URLContent.fromURL(url);
+                                  // Store content in cache for future use (digest already known since it's an extract of the file)
+                                  contentDigestManager.setContentDigest(cacheContent, digest);
+                                  if ((!homeContent.isJAREntry() && homeContent.getURL().indexOf("http") === 0
+                                          || homeContent.isJAREntry() && homeContent.getJAREntryURL().indexOf("http") === 0)
+                                      && !(homeContent instanceof SimpleURLContent)) {
+                                    cacheContent.setSavedContent(homeContent.isJAREntry() 
+                                         ? URLContent.fromURL(homeContent.getJAREntryURL()) 
+                                         : homeContent);                        
+                                  }
+                                  
+                                  if (blobContentEntryName != null) {
+                                    url = "jar:" + url + "!/" + blobContentEntryName;
+                                  }
+                                  remainingHomeContents [homeContent.getURL()] = URLContent.fromURL(url);
+                                  replaceContentsStoredInCache();
+                                },
+                                blobError: function(status, error) {
+                                  console.warn("Can't saved all home extracted data: " + error);
+                                  replaceContentsStoredInCache();
                                 }
-                                var cacheContent = URLContent.fromURL(url);
-                                remainingHomeContents [homeContent.getURL()] = cacheContent;                          
-                                // Store content in cache for future use (digest already known since it's an extract of the file)
-                                contentDigestManager.setContentDigest(cacheContent, digest);
-                                replaceContents();
-                              },
-                              blobError: function(status, error) {
-                                console.warn("Can't saved all home extracted data: " + error);
-                                replaceContents();
-                              }
-                            });
+                              });
+                          }
                         }
                       });
                   };
@@ -426,75 +469,100 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                 for (var j = 0; j < homeContents.length; j++) {
                   var homeContent = homeContents [j];
                   if (permanentContents.indexOf(homeContent) < 0) {
-                    var contentEntryName = homeContent.getJAREntryName();
-                    var slashIndex = contentEntryName.indexOf('/');
-                    if (slashIndex > 0) {
-                      var contentZipOut = new JSZip();
-                      recorder.writeHomeZipEntries(contentZipOut, "", homeContent, {
-                          blobContentEntryName: contentEntryName.substring(slashIndex + 1),
-                          contentSaved: function(homeContent) {
-                            writeBlob(homeContent, recorder.generateZip(contentZipOut, compressionLevel, "blob"), 
-                                this.blobContentEntryName);
-                          }, 
-                          contentError: function(status, error) {
-                            console.warn("Can't extract all home data: " + error);
-                            replaceContents();
-                          }
-                        });
+                    if (!homeContent.isJAREntry()) {
+                      var sendRequest = function(homeContent) {
+                          var request = new XMLHttpRequest();
+                          request.open("GET", homeContent.getURL(), true);
+                          request.responseType = "blob";
+                          request.withCredentials = true;
+                          request.addEventListener("load", function() {
+                              writeBlob(homeContent, request.response);
+                            });
+                          request.send();
+                        };
+                      sendRequest(homeContent);
                     } else {
-                      homeContent.getStreamURL({
-                          homeContent: homeContent,
-                          urlReady: function(url) {
-                            if (url.indexOf("jar:") === 0) {
-                              var entrySeparatorIndex = url.indexOf("!/");
-                              var contentEntryName = decodeURIComponent(url.substring(entrySeparatorIndex + 2));
-                              var jarUrl = url.substring(4, entrySeparatorIndex);
-                              ZIPTools.getZIP(jarUrl, false, {
-                                  homeContent: this.homeContent,
-                                  zipReady : function(zip) {
-                                    try {
-                                      var contentEntry = zip.file(contentEntryName);
-                                      var entryData = contentEntry.asUint8Array();
-                                      if (ZIPTools.isPNGImage(entryData)
-                                          || ZIPTools.isGIFImage(entryData)
-                                          || ZIPTools.isJPEGImage(entryData)
-                                          || ZIPTools.isBMPImage(entryData)) {
-                                        writeBlob(this.homeContent, new Blob([entryData]));
-                                      } else {
-                                        // Store 3D model and other files in a ZIP file with one entry containing homeContent
-                                        var contentZipOut = new JSZip();
-                                        recorder.writeZipEntry(contentZipOut, "data", this.homeContent, {
-                                            contentSaved: function(homeContent) {
-                                              writeBlob(homeContent, recorder.generateZip(contentZipOut, compressionLevel, "blob"), 
-                                                  "data", ".extract");
-                                            }, 
-                                            contentError: function(status, error) {
-                                              console.warn("Can't extract all home data: " + error);
-                                              replaceContents();
-                                            }
-                                          });
-                                      }
-                                    } catch (ex) {
-                                      this.zipError(ex);
-                                    }
-                                  },
-                                  zipError : function(error) {
-                                    console.warn("Can't extract all home data: " + error);
-                                    replaceContents();
-                                  }
-                                });
+                      var contentEntryName = homeContent.getJAREntryName();
+                      var slashIndex = contentEntryName.indexOf('/');
+                      if ((homeContent instanceof HomeURLContent 
+                             && slashIndex > 0)
+                          || !(homeContent instanceof HomeURLContent
+                               || homeContent instanceof SimpleURLContent)) {
+                        var contentObserver = {
+                            blobContentEntryName: contentEntryName.substring(homeContent instanceof HomeURLContent ? slashIndex + 1 : 0),
+                            contentSaved: function(homeContent) {
+                              writeBlob(homeContent, recorder.generateZip(contentZipOut, compressionLevel, "blob"), 
+                                  this.blobContentEntryName);
+                            }, 
+                            contentError: function(status, error) {
+                              console.warn("Can't extract all home data: " + error);
+                              replaceContentsStoredInCache();
                             }
-                          },
-                          urlError: function(status, error) {
-                            console.warn("Can't extract all home data: " + error);
-                            replaceContents();
-                          }    
-                        });
+                          }; 
+                        var contentZipOut = new JSZip();
+                        if (homeContent instanceof HomeURLContent) {
+                          recorder.writeHomeZipEntries(contentZipOut, "", homeContent, contentObserver);
+                        } else {
+                          recorder.writeZipEntries(contentZipOut, "", homeContent, contentObserver);
+                        }
+                      } else {
+                        homeContent.getStreamURL({
+                            homeContent: homeContent,
+                            urlReady: function(url) {
+                              if (url.indexOf("jar:") === 0) {
+                                var entrySeparatorIndex = url.indexOf("!/");
+                                var contentEntryName = decodeURIComponent(url.substring(entrySeparatorIndex + 2));
+                                var jarUrl = url.substring(4, entrySeparatorIndex);
+                                ZIPTools.getZIP(jarUrl, false, {
+                                    homeContent: this.homeContent,
+                                    zipReady : function(zip) {
+                                      try {
+                                        var contentEntry = zip.file(contentEntryName);
+                                        if (contentEntry == null) {
+                                          contentEntry = zip.file("/" + contentEntryName);
+                                        }
+                                        var entryData = contentEntry.asUint8Array();
+                                        if (ZIPTools.isPNGImage(entryData)
+                                            || ZIPTools.isGIFImage(entryData)
+                                            || ZIPTools.isJPEGImage(entryData)
+                                            || ZIPTools.isBMPImage(entryData)) {
+                                          writeBlob(this.homeContent, new Blob([entryData]));
+                                        } else {
+                                          // Store 3D model and other files in a ZIP file with one entry containing homeContent
+                                          var contentZipOut = new JSZip();
+                                          recorder.writeZipEntry(contentZipOut, "data", this.homeContent, {
+                                              contentSaved: function(homeContent) {
+                                                writeBlob(homeContent, recorder.generateZip(contentZipOut, compressionLevel, "blob"), 
+                                                    "data", ".extract");
+                                              }, 
+                                              contentError: function(status, error) {
+                                                console.warn("Can't extract all home data: " + error);
+                                                replaceContentsStoredInCache();
+                                              }
+                                            });
+                                        }
+                                      } catch (ex) {
+                                        this.zipError(ex);
+                                      }
+                                    },
+                                    zipError : function(error) {
+                                      console.warn("Can't extract all home data: " + error);
+                                      replaceContentsStoredInCache();
+                                    }
+                                  });
+                              }
+                            },
+                            urlError: function(status, error) {
+                              console.warn("Can't extract all home data: " + error);
+                              replaceContentsStoredInCache();
+                            }    
+                          });
+                      }
                     }
                   }
                 }
               } else {
-               ZIPTools.disposeZIP(homeUrl);
+               disposeZips();
                observer.homeLoaded(home);
               }
             }
@@ -928,9 +996,15 @@ HomeRecorder.prototype.writeZipEntries = function(zipOut, directory, urlContent,
                 var entries = zip.file(/.*/).reverse();
                 for (var i = entries.length - 1; i >= 0 ; i--) {
                   var zipEntry = entries [i];
+                  // Remove leading / in entry name if it exits
+                  var entryName = zipEntry.name.indexOf("/") === 0 ? zipEntry.name.substring(1) : zipEntry.name;
                   var siblingContent = new URLContent("jar:" + urlContent.getJAREntryURL() + "!/" 
-                      + encodeURIComponent(zipEntry.name).replace("+", "%20"));
-                  recorder.writeZipEntry(zipOut, directory + "/" + zipEntry.name, siblingContent, 
+                      + encodeURIComponent(entryName).replace("+", "%20"));
+                  recorder.writeZipEntry(zipOut, 
+                     directory.length > 0  
+                         ? directory + "/" + entryName
+                         : entryName, 
+                     siblingContent, 
                      { 
                         zipEntry: zipEntry,  
                         contentSaved: function(content) {
@@ -980,7 +1054,11 @@ HomeRecorder.prototype.writeZipEntry = function(zipOut, entryName, content, cont
               zipReady : function(zip) {
                 try {
                   var contentEntry = zip.file(contentEntryName);
-                  zipOut.file(entryName, contentEntry.asUint8Array(), {binary: true});
+                  if (contentEntry == null) {
+                    contentEntry = zip.file("/" + contentEntryName);
+                  }
+                  zipOut.file(entryName, contentEntry.asUint8Array(), 
+                      {binary: true, date: new Date("November 16, 2006 00:00:00")});
                   contentObserver.contentSaved(content);
                 } catch (ex) {
                   this.zipError(ex);
@@ -994,8 +1072,9 @@ HomeRecorder.prototype.writeZipEntry = function(zipOut, entryName, content, cont
           var request = new XMLHttpRequest();
           request.open("GET", url, true);
           request.responseType = "arraybuffer";
+          request.withCredentials = true;
           request.addEventListener("load", function() {
-              zipOut.file(entryName, request.response);
+              zipOut.file(entryName, request.response, {date: new Date("November 16, 2006 00:00:00")});
               contentObserver.contentSaved(content);
             });
           request.send();
