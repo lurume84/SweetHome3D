@@ -2398,15 +2398,29 @@ public class HomeController implements Controller {
     if (this.application != null) {
       // Check every recent home exists
       for (int i = recentHomes.size() - 1; i >= 0; i--) {
-        try {
-          if (!this.application.getHomeRecorder().exists(recentHomes.get(i))) {
-            recentHomes.remove(i);
-          }
-        } catch (RecorderException ex) {
-          // If homeName can't be checked ignore it
+        if (!isRecentHome(recentHomes.get(i))) {
+          recentHomes.remove(i);
         }
       }
       this.preferences.setRecentHomes(recentHomes);
+    }
+  }
+
+  /**
+   * Returns <code>true</code> if a home with the given name may be listed in recent homes.
+   */
+  private boolean isRecentHome(String homeName) {
+    try {
+      // Do not check if online homes exists because it may imply to connect to server,
+      // slowing down too much or blocking the creation of the Open recent menu item content
+      return homeName.startsWith(HomeRecorder.ONLINE_HOME)
+              && Boolean.parseBoolean(System.getProperty("com.eteks.sweethome3d.onlineRecorderEnabled", "true"))
+          || !homeName.startsWith(HomeRecorder.ONLINE_HOME)
+              && this.application != null
+              && this.application.getHomeRecorder().exists(homeName);
+    } catch (RecorderException ex) {
+      // If homeName can't be checked ignore it
+      return false;
     }
   }
 
@@ -2417,15 +2431,11 @@ public class HomeController implements Controller {
     if (this.application != null) {
       List<String> recentHomes = new ArrayList<String>();
       for (String homeName : this.preferences.getRecentHomes()) {
-        try {
-          if (this.application.getHomeRecorder().exists(homeName)) {
-            recentHomes.add(homeName);
-            if (recentHomes.size() == this.preferences.getRecentHomesMaxCount()) {
-              break;
-            }
+        if (isRecentHome(homeName)) {
+          recentHomes.add(homeName);
+          if (recentHomes.size() == this.preferences.getRecentHomesMaxCount()) {
+            break;
           }
-        } catch (RecorderException ex) {
-          // If homeName can't be checked ignore it
         }
       }
       getView().setEnabled(HomeView.ActionType.DELETE_RECENT_HOMES,

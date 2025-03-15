@@ -19,14 +19,28 @@
    * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
    */
    
-  // Updloads the file available in multipart file "home", saves it
+  // Updloads the file available in "home" request parameter or in multipart file "home", saves it
   // in homes directory and returns "1" if save was successful
   $homesDir = ".";
-  $homeFile = $homesDir."/".$_FILES['home']['name'].".sh3d"; 
+  $homeName = isset($_GET['home']) ? $_GET['home'] : $_FILES['home']['name']; 
+  $homeFile = $homesDir."/".$homeName.".sh3d"; 
   
-  if (move_uploaded_file($_FILES['home']['tmp_name'], $homeFile)) {
+  if (isset($_GET['home'])) {
+    // Saves posted data
+    $in = fopen("php://input", "rb");
+    $out = fopen($homeFile, 'w');
+    while (!feof($in)) {
+      fwrite($out, fread($in, 8192));
+    }
+    fclose($in);
+    fclose($out);
     echo "1";
   } else {
-    echo "0";
+    if (move_uploaded_file($_FILES['home']['tmp_name'], $homeFile)) {
+      echo "1";
+    } 
+    else {
+      echo "0";
+    }
   }
 ?>

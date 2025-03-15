@@ -25,7 +25,7 @@
   $handler = opendir($homesDir);
   
   while ($file = readdir($handler)) {
-    if (!is_dir($file) && eregi('.sh3d', $file)) {
+    if (!is_dir($file) && preg_match("/.sh3d$/", $file)) {
       echo substr($file, 0, -5)."\n";
     }  
   }

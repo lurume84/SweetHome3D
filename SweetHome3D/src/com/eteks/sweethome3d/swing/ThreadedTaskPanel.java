@@ -21,6 +21,7 @@ package com.eteks.sweethome3d.swing;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -129,7 +130,7 @@ public class ThreadedTaskPanel extends JPanel implements ThreadedTaskView {
    * Sets the running status of the threaded task.
    * If <code>taskRunning</code> is <code>true</code>, a waiting dialog will be shown.
    */
-  public void setTaskRunning(boolean taskRunning, View executingView) {
+  public void setTaskRunning(boolean taskRunning, final View executingView) {
     this.taskRunning = taskRunning;
     if (taskRunning && this.dialog == null) {
       String dialogTitle = this.preferences.getLocalizedString(
@@ -152,6 +153,17 @@ public class ThreadedTaskPanel extends JPanel implements ThreadedTaskView {
           public void actionPerformed(ActionEvent ev) {
             ((Timer)ev.getSource()).stop();
             if (controller.isTaskRunning()) {
+              // Postpone showing dialog if another modal dialog box is blocking display
+              for (Window window : Window.getWindows()) {
+                if (window.isActive()
+                    && window instanceof JDialog
+                    && ((JDialog)window).isModal()
+                    && window != SwingUtilities.getRoot((JComponent)executingView)) {
+                  ((Timer)ev.getSource()).start();
+                  return;
+                }
+              }
+
               dialog.setVisible(true);
 
               dialog.dispose();

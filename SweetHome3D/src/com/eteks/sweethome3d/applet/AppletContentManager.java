@@ -20,12 +20,15 @@
 package com.eteks.sweethome3d.applet;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -40,6 +43,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.eteks.sweethome3d.io.HomeOnlineRecorder;
 import com.eteks.sweethome3d.model.HomeRecorder;
 import com.eteks.sweethome3d.model.InterruptedRecorderException;
 import com.eteks.sweethome3d.model.RecorderException;
@@ -81,7 +85,9 @@ public class AppletContentManager extends FileContentManager {
   public String getPresentationName(String contentName,
                                     ContentType contentType) {
     if (contentType == ContentType.SWEET_HOME_3D) {
-      return contentName;
+      return contentName.startsWith(HomeRecorder.ONLINE_HOME)
+          ? contentName.substring(HomeRecorder.ONLINE_HOME.length())
+          : contentName;
     } else {
       return super.getPresentationName(contentName, contentType);
     }
@@ -112,9 +118,9 @@ public class AppletContentManager extends FileContentManager {
                                ContentType contentType) {
     if (contentType == ContentType.SWEET_HOME_3D) {
       String [] availableHomes = null;
-      if (this.recorder instanceof HomeAppletRecorder) {
+      if (this.recorder instanceof HomeOnlineRecorder) {
         try {
-          availableHomes = ((HomeAppletRecorder)this.recorder).getAvailableHomes();
+          availableHomes = ((HomeOnlineRecorder)this.recorder).getAvailableHomes();
         } catch (RecorderException ex) {
           String errorMessage = this.preferences.getLocalizedString(
               AppletContentManager.class, "showOpenDialog.availableHomesError");
@@ -139,6 +145,14 @@ public class AppletContentManager extends FileContentManager {
           listModel.addElement(home);
         }
         final JList availableHomesList = new JList(listModel);
+        availableHomesList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                          boolean isSelected, boolean cellHasFocus) {
+              return super.getListCellRendererComponent(list,
+                  getPresentationName((String)value, ContentType.SWEET_HOME_3D), index, isSelected, cellHasFocus);
+            }
+          });
         availableHomesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         availableHomesList.addMouseListener(new MouseAdapter() {
             @Override
@@ -155,15 +169,21 @@ public class AppletContentManager extends FileContentManager {
         panel.add(new JScrollPane(availableHomesList), BorderLayout.CENTER);
 
         Object answer;
-        if (this.recorder instanceof HomeAppletRecorder
-            && ((HomeAppletRecorder)this.recorder).isHomeDeletionAvailable()) {
+        if (this.recorder instanceof HomeOnlineRecorder
+            && ((HomeOnlineRecorder)this.recorder).isHomeDeletionAvailable()) {
           // Show a dialog that lets the user open and delete listed homes
           String delete = this.preferences.getLocalizedString(AppletContentManager.class, "showOpenDialog.delete");
           String open = this.preferences.getLocalizedString(AppletContentManager.class, "showOpenDialog.open");
           String cancel = this.preferences.getLocalizedString(AppletContentManager.class, "showOpenDialog.cancel");
-          final JButton deleteButton = new JButton(new AbstractAction(delete) {
+          // A class which implements View interface to be usable as a parent view
+          class ButtonView extends JButton implements View {
+            public ButtonView(Action action) {
+              super(action);
+            }
+          };
+          final JButton deleteButton = new ButtonView(new AbstractAction(delete) {
               public void actionPerformed(ActionEvent ev) {
-                deleteSelectedHome(parentView, availableHomesList);
+                deleteSelectedHome((View)ev.getSource(), availableHomesList);
               }
             });
           deleteButton.setEnabled(false);
@@ -210,18 +230,19 @@ public class AppletContentManager extends FileContentManager {
   private void deleteSelectedHome(final View parentView, final JList homesList) {
     final String homeName = (String)homesList.getSelectedValue();
     if (homeName != null) {
-      String message = this.preferences.getLocalizedString(AppletContentManager.class, "confirmDeleteHome.message", homeName);
+      String message = this.preferences.getLocalizedString(AppletContentManager.class, "confirmDeleteHome.message",
+          getPresentationName(homeName, ContentType.SWEET_HOME_3D));
       String title = this.preferences.getLocalizedString(AppletContentManager.class, "confirmDeleteHome.title");
       String delete = this.preferences.getLocalizedString(AppletContentManager.class, "confirmDeleteHome.delete");
       String cancel = this.preferences.getLocalizedString(AppletContentManager.class, "confirmDeleteHome.cancel");
 
-      if (JOptionPane.showOptionDialog((JComponent)parentView, message, title,
+      if (SwingTools.showOptionDialog((JComponent)parentView, message, title,
             JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
-            null, new Object [] {delete, cancel}, cancel) == JOptionPane.OK_OPTION) {
+            new Object [] {delete, cancel}, cancel) == JOptionPane.OK_OPTION) {
         // Delete home in a threaded task
         Callable<Void> exportToObjTask = new Callable<Void>() {
             public Void call() throws RecorderException {
-              ((HomeAppletRecorder)recorder).deleteHome(homeName);
+              ((HomeOnlineRecorder)recorder).deleteHome(homeName);
               ((DefaultListModel)homesList.getModel()).removeElement(homeName);
               return null;
             }
@@ -261,6 +282,9 @@ public class AppletContentManager extends FileContentManager {
     if (contentType == ContentType.SWEET_HOME_3D) {
       String message = this.preferences.getLocalizedString(
           AppletContentManager.class, "showSaveDialog.message");
+      if (name != null && name.startsWith(HomeRecorder.ONLINE_HOME)) {
+        name = name.substring(HomeRecorder.ONLINE_HOME.length());
+      }
       String savedName = (String)JOptionPane.showInputDialog(SwingUtilities.getRootPane((JComponent)parentView),
           message, getFileDialogTitle(true), JOptionPane.QUESTION_MESSAGE, null, null, name);
       if (savedName == null) {
@@ -270,14 +294,14 @@ public class AppletContentManager extends FileContentManager {
 
       try {
         // If the name exists, prompt user if he wants to overwrite it
-        if (this.recorder.exists(savedName)
+        if (this.recorder.exists(HomeRecorder.ONLINE_HOME + savedName)
             && !confirmOverwrite(parentView, savedName)) {
           return showSaveDialog(parentView, dialogTitle, contentType, savedName);
         // If name is empty, prompt user again
         } else if (savedName.length() == 0) {
           return showSaveDialog(parentView, dialogTitle, contentType, savedName);
         }
-        return savedName;
+        return HomeRecorder.ONLINE_HOME + savedName;
       } catch (RecorderException ex) {
         String errorMessage = this.preferences.getLocalizedString(
             AppletContentManager.class, "showSaveDialog.checkHomeError");

@@ -46,6 +46,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,17 +77,26 @@ import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 
+import org.xml.sax.SAXException;
+
+import com.eteks.sweethome3d.applet.AppletContentManager;
 import com.eteks.sweethome3d.io.AutoRecoveryManager;
+import com.eteks.sweethome3d.io.ContentRecording;
+import com.eteks.sweethome3d.io.DefaultFurnitureCatalog;
+import com.eteks.sweethome3d.io.DefaultTexturesCatalog;
 import com.eteks.sweethome3d.io.FileUserPreferences;
 import com.eteks.sweethome3d.io.HomeFileRecorder;
+import com.eteks.sweethome3d.io.HomeOnlineRecorder;
+import com.eteks.sweethome3d.io.HomeXMLHandler;
 import com.eteks.sweethome3d.j3d.Component3DManager;
 import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
+import com.eteks.sweethome3d.model.Content;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
-import com.eteks.sweethome3d.model.ObjectProperty;
 import com.eteks.sweethome3d.model.HomeRecorder;
 import com.eteks.sweethome3d.model.Library;
+import com.eteks.sweethome3d.model.ObjectProperty;
 import com.eteks.sweethome3d.model.RecorderException;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.plugin.HomePluginController;
@@ -136,6 +146,9 @@ import com.eteks.sweethome3d.viewcontroller.ViewFactory;
  * <li><code>com.eteks.sweethome3d.checkUpdates</code> should be set to <code>false</code>
  * if application and library updates shouldn't be checked in Sweet Home 3D.
  *
+ * <li><code>com.eteks.sweethome3d.onlineRecorderEnabled</code> should be set to <code>false</code>
+ * if it shouldn't be possible to open / save homes on Online server.
+ *
  * <li><code>com.eteks.sweethome3d.resolutionScale</code> can be set to a decimal value different from 1 to enlarge
  * or reduce user interface elements with a given factor. For example, <code>1.2</code> will make them look 20% larger.
  *
@@ -168,10 +181,19 @@ public class SweetHome3D extends HomeApplication {
   private static final String     APPLICATION_FOLDERS            = "com.eteks.sweethome3d.applicationFolders";
   private static final String     APPLICATION_PLUGINS_SUB_FOLDER = "plugins";
 
+  private static DefaultFurnitureCatalog onlineFurnitureCatalog;
+  private static DefaultTexturesCatalog  onlineTexturesCatalog;
+
+  private HomeRecorder            compressedHomeFileRecorder;
+  private HomeRecorder            defaultHomeFileRecorder;
+  private HomeOnlineRecorder      homeOnlineRecorder;
   private HomeRecorder            homeRecorder;
   private HomeRecorder            compressedHomeRecorder;
+  private HomeRecorder            recoveryHomeRecorder;
   private UserPreferences         userPreferences;
   private ContentManager          contentManager;
+  private ContentManager          fileContentManager;
+  private ContentManager          onlineContentManager;
   private ViewFactory             viewFactory;
   private PluginManager           pluginManager;
   private boolean                 pluginManagerInitialized;
@@ -194,24 +216,195 @@ public class SweetHome3D extends HomeApplication {
    */
   @Override
   public HomeRecorder getHomeRecorder() {
-    // Initialize homeRecorder lazily
     if (this.homeRecorder == null) {
-      this.homeRecorder = new HomeFileRecorder(0, false, getUserPreferences(), false, true, true);
+      this.homeRecorder = new HomeRecorder() {
+          public void writeHome(Home home, String name) throws RecorderException {
+            if (name.startsWith(ONLINE_HOME)) {
+              getHomeOnlineRecorder().writeHome(home, name);
+            } else {
+              getHomeFileRecorder(HomeRecorder.Type.DEFAULT).writeHome(home, name);
+            }
+          }
+
+          public Home readHome(String name) throws RecorderException {
+            if (name.startsWith(ONLINE_HOME)) {
+              return getHomeOnlineRecorder().readHome(name);
+            } else {
+              return getHomeFileRecorder(HomeRecorder.Type.DEFAULT).readHome(name);
+            }
+          }
+
+          public boolean exists(String name) throws RecorderException {
+            if (name.startsWith(ONLINE_HOME)) {
+              return getHomeOnlineRecorder().exists(name);
+            } else {
+              return getHomeFileRecorder(HomeRecorder.Type.DEFAULT).exists(name);
+            }
+          }
+        };
     }
     return this.homeRecorder;
   }
 
-  @Override
-  public HomeRecorder getHomeRecorder(HomeRecorder.Type type) {
-    if (type == HomeRecorder.Type.COMPRESSED) {
-      // Initialize compressedHomeRecorder lazily
-      if (this.compressedHomeRecorder == null) {
-        this.compressedHomeRecorder = new HomeFileRecorder(9, false, getUserPreferences(), false, true, true);
-      }
-      return this.compressedHomeRecorder;
-    } else {
-      return super.getHomeRecorder(type);
+  /**
+   * Returns a recorder able to write and read homes in files.
+   */
+ @Override
+  public HomeRecorder getHomeRecorder(final HomeRecorder.Type type) {
+    switch (type) {
+      case RECOVERY :
+        if (this.recoveryHomeRecorder == null) {
+          final HomeRecorder     fileRecorder = new HomeFileRecorder(0, false, getUserPreferences(), false, true, true);
+          final HomeFileRecorder fileRecorderWithNoExternalContent = new HomeFileRecorder(0,
+              ContentRecording.INCLUDE_NO_EXTERNAL_CONTENT, getUserPreferences(), false, true, false) {
+                @Override
+                protected HomeXMLHandler getHomeXMLHandler() {
+                  return new HomeXMLHandler() {
+                      @Override
+                      protected Content parseContent(String elementName, Map<String, String> attributes, String attributeName) throws SAXException {
+                        String contentFile = attributes.get(attributeName);
+                        if (contentFile != null
+                            && (contentFile.startsWith("http") || contentFile.startsWith("jar:http"))
+                            && contentFile.contains("?")) {
+                          try {
+                            // Retrieve session
+                            getHomeOnlineRecorder().checkOnlineSession();
+                          } catch (IOException ex) {
+                            ex.printStackTrace();
+                          }
+                        }
+                        return super.parseContent(elementName, attributes, attributeName);
+                      }
+                    };
+                }
+            };
+          this.recoveryHomeRecorder = new HomeRecorder() {
+            public void writeHome(Home home, String name) throws RecorderException {
+                if (home.getName() != null
+                    && home.getName().startsWith(ONLINE_HOME)) {
+                  fileRecorderWithNoExternalContent.writeHome(home, name);
+                } else {
+                  fileRecorder.writeHome(home, name);
+                }
+              }
+
+              public Home readHome(String name) throws RecorderException {
+                return fileRecorderWithNoExternalContent.readHome(name);
+              }
+
+              public boolean exists(String name) throws RecorderException {
+                return fileRecorder.exists(name);
+              }
+            };
+        }
+        return this.recoveryHomeRecorder;
+      case COMPRESSED :
+        if (this.compressedHomeRecorder == null) {
+          this.compressedHomeRecorder = new HomeRecorder() {
+              public void writeHome(Home home, String name) throws RecorderException {
+                if (name.startsWith(ONLINE_HOME)) {
+                  getHomeOnlineRecorder().writeHome(home, name);
+                } else {
+                  getHomeFileRecorder(type).writeHome(home, name);
+                }
+              }
+
+              public Home readHome(String name) throws RecorderException {
+                if (name.startsWith(ONLINE_HOME)) {
+                  return getHomeOnlineRecorder().readHome(name);
+                } else {
+                  return getHomeFileRecorder(type).readHome(name);
+                }
+              }
+
+              public boolean exists(String name) throws RecorderException {
+                if (name.startsWith(ONLINE_HOME)) {
+                  return getHomeOnlineRecorder().exists(name);
+                } else {
+                  return getHomeFileRecorder(type).exists(name);
+                }
+              }
+            };
+        }
+        return this.compressedHomeRecorder;
+      default:
+        return getHomeRecorder();
     }
+  }
+
+  /**
+   * Returns a recorder able to write and read homes in local files.
+   */
+  protected HomeRecorder getHomeFileRecorder(HomeRecorder.Type type) {
+    switch (type) {
+      case COMPRESSED :
+        if (this.compressedHomeFileRecorder == null) {
+          this.compressedHomeFileRecorder = new HomeFileRecorder(9, false, getUserPreferences(), false, true, true);
+        }
+        return this.compressedHomeFileRecorder;
+      case DEFAULT :
+      default:
+        if (this.defaultHomeFileRecorder == null) {
+          this.defaultHomeFileRecorder = new HomeFileRecorder(0, false, getUserPreferences(), false, true, true);
+        }
+        return this.defaultHomeFileRecorder;
+    }
+  }
+
+  /**
+   * Returns a recorder able to write and read homes on Online server.
+   */
+  protected HomeOnlineRecorder getHomeOnlineRecorder() {
+    if (this.homeOnlineRecorder == null) {
+      try {
+        // Instantiate onlineContentManager lazily to avoid connecting to Internet
+        // if com.eteks.sweethome3d.onlineRecorderEnabled is false
+        final String onlineHost = System.getProperty("com.eteks.sweethome3d.onlineHost", "https://www.sweethome3d.com");
+        if (onlineHost.endsWith("www.sweethome3d.com")) {
+          if (onlineFurnitureCatalog == null) {
+            // online catalogs should provide iconDigest, modelDigest, imageDigest properties
+            // to take into account 3D models, icons and texture images hosted on server
+            onlineFurnitureCatalog = new DefaultFurnitureCatalog(
+                new URL [] {new URL(onlineHost + "/online/onlineFurnitureCatalog.zip")},
+                new URL(onlineHost + "/models/"));
+            onlineTexturesCatalog = new DefaultTexturesCatalog(
+                new URL [] {new URL(onlineHost + "/online/onlineTexturesCatalog.zip")},
+                new URL(onlineHost + "/textures/"));
+          }
+          this.homeOnlineRecorder = new SweetHome3DOnlineRecorder(
+              onlineHost + "/online/writeHome.jsp",
+              onlineHost + "/online/readHome.jsp?home=%s",
+              onlineHost + "/online/listHomes.jsp",
+              onlineHost + "/online/deleteHome.jsp?home=%s",
+              onlineHost + "/online/writeResource.jsp?path=%s",
+              onlineHost + "/online/readResource.jsp?path=%s",
+              onlineHost + "/support/forum/loginprocess?url=" + URLEncoder.encode(onlineHost + "/online/loginSucceeded.jsp", "UTF-8"),
+              "JSESSIONID",
+              onlineFurnitureCatalog,
+              onlineTexturesCatalog, getUserPreferences());
+        } else {
+          // For example, with com.eteks.sweethome3d.onlineHost property set to http://localhost:8000 with a PHP server running in deploy folder
+          if (onlineFurnitureCatalog == null) {
+            onlineFurnitureCatalog = new DefaultFurnitureCatalog(new URL [] {}, new URL(onlineHost));
+            onlineTexturesCatalog = new DefaultTexturesCatalog(new URL [] {}, new URL(onlineHost));
+          }
+          this.homeOnlineRecorder = new SweetHome3DOnlineRecorder(
+              onlineHost + "/writeHome.php",
+              onlineHost + "/readHome.php?home=%s",
+              onlineHost + "/listHomes.php",
+              onlineHost + "/deleteHome.php?home=%s",
+              onlineHost + "/writeResource.php?path=%s",
+              onlineHost + "/readResource.php?path=%s",
+              onlineHost + "/login.php",
+              "PHPSESSID",
+              onlineFurnitureCatalog,
+              onlineTexturesCatalog, getUserPreferences());
+        }
+      } catch (IOException ex) {
+        throw new IllegalStateException("Can't init Online recorder", ex);
+      }
+    }
+    return this.homeOnlineRecorder;
   }
 
   /**
@@ -278,13 +471,100 @@ public class SweetHome3D extends HomeApplication {
   }
 
   /**
-   * Returns a content manager able to handle files.
+   * Returns a content manager able to handle files or Online homes.
    */
   protected ContentManager getContentManager() {
     if (this.contentManager == null) {
-      this.contentManager = new FileContentManagerWithRecordedLastDirectories(getUserPreferences(), getClass());
+      this.contentManager = new ContentManager() {
+          public String getPresentationName(String contentName, ContentManager.ContentType contentType) {
+            if (contentType == ContentManager.ContentType.SWEET_HOME_3D
+                && contentName.startsWith(HomeRecorder.ONLINE_HOME)) {
+              return contentName.substring(HomeRecorder.ONLINE_HOME.length());
+            } else {
+              return getFileContentManager().getPresentationName(contentName, contentType);
+            }
+          }
+
+          public String showOpenDialog(View parentView, String dialogTitle, ContentManager.ContentType contentType) {
+            if (contentType == ContentManager.ContentType.SWEET_HOME_3D
+                && Boolean.parseBoolean(System.getProperty("com.eteks.sweethome3d.onlineRecorderEnabled", "true"))) {
+              String message = getUserPreferences().getLocalizedString(SweetHome3D.class, "openOnline.message");
+              String openOnline = getUserPreferences().getLocalizedString(SweetHome3D.class, "openOnline.online");
+              String openFile = getUserPreferences().getLocalizedString(SweetHome3D.class, "openOnline.file");
+              String cancel = getUserPreferences().getLocalizedString(SweetHome3D.class, "openOnline.cancel");
+              switch (SwingTools.showOptionDialog(null, message, dialogTitle, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
+                  new Object [] {openOnline, openFile, cancel}, openFile)) {
+                case JOptionPane.YES_OPTION :
+                  return getOnlineContentManager().showOpenDialog(parentView, dialogTitle, contentType);
+                case JOptionPane.NO_OPTION :
+                  return getFileContentManager().showOpenDialog(parentView, dialogTitle, contentType);
+                default :
+                  return null;
+              }
+            } else {
+              return getFileContentManager().showOpenDialog(parentView, dialogTitle, contentType);
+            }
+          }
+
+          public String showSaveDialog(View parentView, String dialogTitle, ContentManager.ContentType contentType, String name) {
+            if (contentType == ContentManager.ContentType.SWEET_HOME_3D
+                && Boolean.parseBoolean(System.getProperty("com.eteks.sweethome3d.onlineRecorderEnabled", "true"))) {
+              String message = getUserPreferences().getLocalizedString(SweetHome3D.class, "saveOnline.message");
+              String saveOnline = getUserPreferences().getLocalizedString(SweetHome3D.class, "saveOnline.online");
+              String saveFile = getUserPreferences().getLocalizedString(SweetHome3D.class, "saveOnline.file");
+              String cancel = getUserPreferences().getLocalizedString(SweetHome3D.class, "saveOnline.cancel");
+              switch (SwingTools.showOptionDialog(null, message, dialogTitle, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
+                  new Object [] {saveOnline, saveFile, cancel}, saveFile)) {
+                case JOptionPane.YES_OPTION :
+                  if (name != null) {
+                    name = HomeRecorder.ONLINE_HOME + getPresentationName(name, contentType);
+                  }
+                  return getOnlineContentManager().showSaveDialog(parentView, dialogTitle, contentType, name);
+                case JOptionPane.NO_OPTION :
+                  if (name != null && name.startsWith(HomeRecorder.ONLINE_HOME)) {
+                    name = getPresentationName(name, contentType);
+                  }
+                  return getFileContentManager().showSaveDialog(parentView, dialogTitle, contentType, name);
+                default :
+                  return null;
+              }
+            } else {
+              return getFileContentManager().showSaveDialog(parentView, dialogTitle, contentType, name);
+            }
+          }
+
+          public Content getContent(String contentLocation) throws RecorderException {
+            return getFileContentManager().getContent(contentLocation);
+          }
+
+          public boolean isAcceptable(String contentLocation, ContentType contentType) {
+            return getFileContentManager().isAcceptable(contentLocation, contentType);
+          }
+        };
     }
     return this.contentManager;
+  }
+
+  /**
+   * Returns content manager for homes stored in local files.
+   */
+  protected ContentManager getFileContentManager() {
+    if (this.fileContentManager == null) {
+      this.fileContentManager = new FileContentManager(getUserPreferences());
+    }
+    return this.fileContentManager;
+  }
+
+  /**
+   * Returns content manager for Online homes.
+   */
+  protected ContentManager getOnlineContentManager() {
+    if (this.onlineContentManager == null) {
+      // Instantiate onlineContentManager lazily to avoid connecting to Internet
+      // if com.eteks.sweethome3d.onlineRecorderEnabled is false
+      this.onlineContentManager = new AppletContentManager(getHomeOnlineRecorder(), getUserPreferences(), getViewFactory());
+    }
+    return this.onlineContentManager;
   }
 
   /**

@@ -29,14 +29,19 @@ public enum ContentRecording {
    */
   INCLUDE_ALL_CONTENT,
   /**
-   * Include content instances of <code>TemporaryURLContent</code> class referenced by a 
-   * {@link com.eteks.sweethome3d.model.Home Home} instance as well as the content already saved with it. 
+   * Include content instances of <code>TemporaryURLContent</code> class referenced by a
+   * {@link com.eteks.sweethome3d.model.Home Home} instance as well as the content already saved with it.
    */
   INCLUDE_TEMPORARY_CONTENT,
   /**
+   * Include all content objects referenced by a {@link com.eteks.sweethome3d.model.Home Home} instance
+   * except <code>URLContent</code> class which references external URLs.
+   */
+  INCLUDE_NO_EXTERNAL_CONTENT,
+  /**
    * Include no content instance referenced by a {@link com.eteks.sweethome3d.model.Home Home} instance.
-   * This should be used only if all the content objects reference external data which is always available 
-   * (with an URL for example). 
+   * This should be used only if all the content objects reference external data which is always available
+   * (with an URL for example).
    */
   INCLUDE_NO_CONTENT
 }

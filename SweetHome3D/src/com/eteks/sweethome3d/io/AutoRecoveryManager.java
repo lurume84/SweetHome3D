@@ -54,7 +54,7 @@ import com.eteks.sweethome3d.tools.OperatingSystem;
 
 /**
  * Manager able to automatically save open homes in recovery folder with a timer.
- * The delay between two automatic save operations is specified by 
+ * The delay between two automatic save operations is specified by
  * {@link UserPreferences#getAutoSaveDelayForRecovery() auto save delay for recovery}
  * property.
  * @author Emmanuel Puybaret
@@ -67,7 +67,7 @@ public class AutoRecoveryManager {
 
   private final HomeApplication             application;
   private final List<Home>                  recoveredHomes      = new ArrayList<Home>();
-  // The auto saved files and their locked output streams are handled 
+  // The auto saved files and their locked output streams are handled
   // only in autoSaveForRecoveryExecutor single thread executor
   private final Map<Home, File>             autoSavedFiles      = new HashMap<Home, File>();
   private final Map<File, FileOutputStream> lockedOutputStreams = new HashMap<File, FileOutputStream>();
@@ -78,7 +78,7 @@ public class AutoRecoveryManager {
   /**
    * Creates a manager able to automatically recover <code>application</code> homes.
    * As this constructor adds some listeners on <code>application</code> instance and its preferences,
-   * it should be invoked only from the same thread where application is modified or at program startup. 
+   * it should be invoked only from the same thread where application is modified or at program startup.
    */
   public AutoRecoveryManager(HomeApplication application) throws RecorderException {
     this.application = application;
@@ -89,9 +89,9 @@ public class AutoRecoveryManager {
           return thread;
         }
       });
-    
+
     readRecoveredHomes();
-    
+
     // Interrupt auto saving when program stops
     Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
@@ -99,7 +99,7 @@ public class AutoRecoveryManager {
           autoSaveForRecoveryExecutor.shutdownNow();
         }
       });
-    
+
     // Remove auto saved files when a home is closed
     application.addHomesListener(new CollectionListener<Home>() {
         public void collectionChanged(CollectionEvent<Home> ev) {
@@ -121,7 +121,7 @@ public class AutoRecoveryManager {
           }
         }
       });
-    
+
     // Add a listener on auto save delay that will run auto save timer
     application.getUserPreferences().addPropertyChangeListener(Property.AUTO_SAVE_DELAY_FOR_RECOVERY, new PropertyChangeListener() {
         public void propertyChange(PropertyChangeEvent ev) {
@@ -155,9 +155,9 @@ public class AutoRecoveryManager {
       for (final File file : recoveredFiles) {
         if (!isFileLocked(file)) {
           try {
-            final Home home = this.application.getHomeRecorder().readHome(file.getPath());
-            // Recovered homes are the ones with a name different from the file path 
-            if (home.getName() == null 
+            final Home home = this.application.getHomeRecorder(HomeRecorder.Type.RECOVERY).readHome(file.getPath());
+            // Recovered homes are the ones with a name different from the file path
+            if (home.getName() == null
                 || !file.equals(new File(home.getName()))) {
               home.setRecovered(true);
               // Delete recovered file once home isn't recovered anymore
@@ -173,7 +173,7 @@ public class AutoRecoveryManager {
           } catch (RecorderException ex) {
             ex.printStackTrace();
             // Rename file to avoid it to be read again at next launch
-            file.renameTo(new File(recoveryFolder, 
+            file.renameTo(new File(recoveryFolder,
                 file.getName().replace(RECOVERED_FILE_EXTENSION, UNRECOVERABLE_FILE_EXTENSION)));
           }
         }
@@ -188,7 +188,7 @@ public class AutoRecoveryManager {
     FileOutputStream out = null;
     try {
       // Check file lock is free
-      out = new FileOutputStream(file, true); 
+      out = new FileOutputStream(file, true);
       return out.getChannel().tryLock() == null;
     } catch (IOException ex) {
       // Forget this file
@@ -205,7 +205,7 @@ public class AutoRecoveryManager {
   }
 
   /**
-   * Opens recovered homes and adds them to application. 
+   * Opens recovered homes and adds them to application.
    */
   public void openRecoveredHomes() {
     for (Home recoveredHome : this.recoveredHomes) {
@@ -227,9 +227,9 @@ public class AutoRecoveryManager {
     // Clear the list to avoid open twice the recovered homes
     this.recoveredHomes.clear();
   }
-  
+
   /**
-   * Restarts the timer that regularly saves application homes. 
+   * Restarts the timer that regularly saves application homes.
    */
   private void restartTimer() {
     if (this.timer != null) {
@@ -261,7 +261,7 @@ public class AutoRecoveryManager {
             // Handle and clone application homes in Event Dispatch Thread
             for (final Home home : application.getHomes()) {
               final Home autoSavedHome = home.clone();
-              final HomeRecorder homeRecorder = application.getHomeRecorder();
+              final HomeRecorder homeRecorder = application.getHomeRecorder(HomeRecorder.Type.RECOVERY);
               autoSaveForRecoveryExecutor.submit(new Runnable() {
                 public void run() {
                   try {
@@ -298,9 +298,12 @@ public class AutoRecoveryManager {
       // Find a unique file for home in recovered files sub folder
       if (autoSavedHome.getName() != null) {
         String homeFile = new File(autoSavedHome.getName()).getName();
+        if (homeFile.startsWith(HomeRecorder.ONLINE_HOME)) {
+          homeFile = homeFile.substring(HomeRecorder.ONLINE_HOME.length());
+        }
         autoSavedHomeFile = new File(recoveredFilesFolder, homeFile + RECOVERED_FILE_EXTENSION);
         if (autoSavedHomeFile.exists()) {
-          autoSavedHomeFile = new File(recoveredFilesFolder, 
+          autoSavedHomeFile = new File(recoveredFilesFolder,
               UUID.randomUUID() + "-" + homeFile + RECOVERED_FILE_EXTENSION);
         }
       } else {
@@ -308,20 +311,20 @@ public class AutoRecoveryManager {
             UUID.randomUUID() + RECOVERED_FILE_EXTENSION);
       }
     }
-    freeLockedFile(autoSavedHomeFile);        
+    freeLockedFile(autoSavedHomeFile);
     if (autoSavedHome.isModified()) {
       this.autoSavedFiles.put(home, autoSavedHomeFile);
       try {
-        // Save home and lock the saved file to avoid possible auto recovery processes to read it 
+        // Save home and lock the saved file to avoid possible auto recovery processes to read it
         homeRecorder.writeHome(autoSavedHome, autoSavedHomeFile.getPath());
-        
+
         FileOutputStream lockedOutputStream = null;
         try {
           lockedOutputStream = new FileOutputStream(autoSavedHomeFile, true);
           lockedOutputStream.getChannel().lock();
           this.lockedOutputStreams.put(autoSavedHomeFile, lockedOutputStream);
         } catch (OverlappingFileLockException ex) {
-          // Don't try to race with other processes that acquired a lock on the file 
+          // Don't try to race with other processes that acquired a lock on the file
         } catch (IOException ex) {
           if (lockedOutputStream != null) {
             try {
@@ -330,11 +333,11 @@ public class AutoRecoveryManager {
               // Forget it
             }
           }
-          throw new RecorderException("Can't lock saved home", ex);            
+          throw new RecorderException("Can't lock saved home", ex);
         }
       } catch (InterruptedRecorderException ex) {
         // Forget exception that probably happen because of shutdown hook management
-      } 
+      }
     } else {
       autoSavedHomeFile.delete();
       this.autoSavedFiles.remove(home);

@@ -45,12 +45,12 @@ import com.eteks.sweethome3d.tools.OperatingSystem;
  * @author Emmanuel Puybaret
  */
 public class HomeFileRecorder implements HomeRecorder {
-  private final int             compressionLevel;
-  private final boolean         includeOnlyTemporaryContent;
-  private final UserPreferences preferences;
-  private final boolean         preferPreferencesContent;
-  private final boolean         preferXmlEntry;
-  private final boolean         acceptUrl;
+  private final int              compressionLevel;
+  private final ContentRecording savedContentRecording;
+  private final UserPreferences  preferences;
+  private final boolean          preferPreferencesContent;
+  private final boolean          preferXmlEntry;
+  private final boolean          acceptUrl;
 
   /**
    * Creates a home recorder able to write and read homes in uncompressed files.
@@ -161,14 +161,47 @@ public class HomeFileRecorder implements HomeRecorder {
                           boolean         preferPreferencesContent,
                           boolean         preferXmlEntry,
                           boolean         acceptUrl) {
+    this(compressionLevel,
+        includeOnlyTemporaryContent
+            ? ContentRecording.INCLUDE_TEMPORARY_CONTENT
+            : ContentRecording.INCLUDE_ALL_CONTENT,
+        preferences, preferPreferencesContent, preferXmlEntry, acceptUrl);
+  }
+
+  /**
+   * Creates a home recorder able to write and read homes in files compressed
+   * at a level from 0 to 9.
+   * @param compressionLevel 0-9
+   * @param includeOnlyTemporaryContent if <code>true</code>, content instances of
+   *            <code>TemporaryURLContent</code> class referenced by the saved home
+   *            as well as the content previously saved with it will be written.
+   *            If <code>false</code>, all the content instances
+   *            referenced by the saved home will be written in the zip stream.
+   * @param preferences If not <code>null</code>, the furniture and textures contents
+   *            it references might be used to replace the one of read homes
+   *            when they are equal.
+   * @param preferPreferencesContent If <code>true</code>, the furniture and textures contents
+   *            referenced by <code>preferences</code> will replace the one of read homes
+   *            as often as possible when they are equal. Otherwise, these contents will be
+   *            used only to replace damaged content that might be found in read home files.
+   * @param preferXmlEntry If <code>true</code>, an additional <code>Home.xml</code> entry
+   *            will be saved in files and read in priority from saved files.
+   * @param acceptUrl If <code>true</code>, this recorder will try to read a home from a URL
+   *            if the path passed as parameter to {@link #readHome(String) readHome} isn't a file.
+   */
+  public HomeFileRecorder(int              compressionLevel,
+                          ContentRecording savedContentRecording,
+                          UserPreferences  preferences,
+                          boolean          preferPreferencesContent,
+                          boolean          preferXmlEntry,
+                          boolean          acceptUrl) {
     this.compressionLevel = compressionLevel;
-    this.includeOnlyTemporaryContent = includeOnlyTemporaryContent;
+    this.savedContentRecording = savedContentRecording;
     this.preferences = preferences;
     this.preferPreferencesContent = preferPreferencesContent;
     this.preferXmlEntry = preferXmlEntry;
     this.acceptUrl = acceptUrl;
   }
-
   /**
    * Writes home data.
    * @throws RecorderException if a problem occurred while writing home.
@@ -187,9 +220,7 @@ public class HomeFileRecorder implements HomeRecorder {
       tempFile = OperatingSystem.createTemporaryFile("save", ".sweethome3d");
       homeOut = new DefaultHomeOutputStream(new FileOutputStream(tempFile),
           this.compressionLevel,
-          this.includeOnlyTemporaryContent
-              ? ContentRecording.INCLUDE_TEMPORARY_CONTENT
-              : ContentRecording.INCLUDE_ALL_CONTENT,
+          this.savedContentRecording,
           true,
           this.preferXmlEntry
               ? getHomeXMLExporter()

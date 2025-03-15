@@ -53,6 +53,7 @@ import com.eteks.sweethome3d.model.CollectionEvent;
 import com.eteks.sweethome3d.model.CollectionListener;
 import com.eteks.sweethome3d.model.Home;
 import com.eteks.sweethome3d.model.HomeApplication;
+import com.eteks.sweethome3d.model.HomeRecorder;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.swing.SwingTools;
 import com.eteks.sweethome3d.tools.OperatingSystem;
@@ -491,10 +492,14 @@ public class HomeFramePane extends JRootPane implements View {
         putClientProperty("Window.documentModified", homeModified);
 
         if (homeName != null) {
-          File homeFile = new File(homeName);
-          if (homeFile.exists()) {
-            // Update the home icon in window title bar for home files
-            putClientProperty("Window.documentFile", homeFile);
+          if (homeName.startsWith(HomeRecorder.ONLINE_HOME)) {
+            putClientProperty("Window.documentFile", null);
+          } else {
+            File homeFile = new File(homeName);
+            if (homeFile.exists()) {
+              // Update the home icon in window title bar for home files
+              putClientProperty("Window.documentFile", homeFile);
+            }
           }
         }
       }

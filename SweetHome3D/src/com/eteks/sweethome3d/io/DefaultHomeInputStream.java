@@ -61,7 +61,7 @@ import com.eteks.sweethome3d.tools.URLContent;
  * @see DefaultHomeOutputStream
  * @author Emmanuel Puybaret
  */
-public class DefaultHomeInputStream extends FilterInputStream {
+public class DefaultHomeInputStream extends HomeInputStream {
   private final ContentRecording   contentRecording;
   private final HomeXMLHandler     xmlHandler;
   private final UserPreferences    preferences;

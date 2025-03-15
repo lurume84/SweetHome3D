@@ -32,22 +32,33 @@ public interface HomeRecorder {
     /**
      * The default recorder type.
      */
-    DEFAULT, 
+    DEFAULT,
     /**
      * A recorder type able to compress home data.
      */
-    COMPRESSED}
-  
+    COMPRESSED,
+    /**
+     * A recorder used to record home data for recovery purpose.
+     * @since 7.7
+     */
+    RECOVERY}
+
+  /**
+   * Prefix for home names stored Online.
+   * @since 7.7
+   */
+  public String ONLINE_HOME = "online:";
+
   /**
    * Writes <code>home</code> data.
    * @param home  the home to write.
-   * @param name  the name of the resource in which the home will be written. 
+   * @param name  the name of the resource in which the home will be written.
    */
   public void writeHome(Home home, String name) throws RecorderException;
-  
+
   /**
    * Returns a home instance read from its <code>name</code>.
-   * @param name  the name of the resource from which the home will be read. 
+   * @param name  the name of the resource from which the home will be read.
    */
   public Home readHome(String name) throws RecorderException;
 

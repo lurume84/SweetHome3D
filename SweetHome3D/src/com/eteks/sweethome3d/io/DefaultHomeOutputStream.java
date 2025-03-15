@@ -20,16 +20,12 @@
 package com.eteks.sweethome3d.io;
 
 import java.io.File;
-import java.io.FilterOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -51,7 +47,7 @@ import com.eteks.sweethome3d.tools.URLContent;
  * @see DefaultHomeInputStream
  * @author Emmanuel Puybaret
  */
-public class DefaultHomeOutputStream extends FilterOutputStream {
+public class DefaultHomeOutputStream extends HomeOutputStream {
   private int              compressionLevel;
   private ContentRecording contentRecording;
   private boolean          serializedHome;
@@ -121,17 +117,6 @@ public class DefaultHomeOutputStream extends FilterOutputStream {
     this.contentRecording = contentRecording;
     this.serializedHome = serializedHome;
     this.homeXmlExporter = homeXmlExporter;
-  }
-
-  /**
-   * Throws an <code>InterruptedRecorderException</code> exception
-   * if current thread is interrupted. The interrupted status of the current thread
-   * is cleared when an exception is thrown.
-   */
-  private static void checkCurrentThreadIsntInterrupted() throws InterruptedIOException {
-    if (Thread.interrupted()) {
-      throw new InterruptedIOException();
-    }
   }
 
   /**
@@ -226,124 +211,6 @@ public class DefaultHomeOutputStream extends FilterOutputStream {
   }
 
   /**
-   * Writes in <code>zipOut</code> stream one or more entries matching the content
-   * <code>urlContent</code> coming from a resource file.
-   */
-  private void writeResourceZipEntries(ZipOutputStream zipOut,
-                                       String entryNameOrDirectory,
-                                       ResourceURLContent urlContent) throws IOException {
-    if (urlContent.isMultiPartResource()) {
-      if (urlContent.isJAREntry()) {
-        URL zipUrl = urlContent.getJAREntryURL();
-        String entryName = urlContent.getJAREntryName();
-        int lastSlashIndex = entryName.lastIndexOf('/');
-        if (lastSlashIndex != -1) {
-          // Consider content is a multi part resource only if it's in a subdirectory
-          String entryDirectory = entryName.substring(0, lastSlashIndex + 1);
-          // Write in home stream each zipped stream entry that is stored in the same directory
-          for (ContentDigestManager.ZipEntryData zipEntry : ContentDigestManager.getInstance().getZipURLEntries(urlContent)) {
-            String zipEntryName = zipEntry.getName();
-            if (zipEntryName.startsWith(entryDirectory)) {
-              Content siblingContent = new URLContent(new URL("jar:" + zipUrl + "!/"
-                  + URLEncoder.encode(zipEntryName, "UTF-8").replace("+", "%20")));
-              writeZipEntry(zipOut, entryNameOrDirectory + zipEntryName.substring(lastSlashIndex), siblingContent);
-            }
-          }
-        } else {
-          // Consider the content as not a multipart resource
-          writeZipEntry(zipOut, entryNameOrDirectory, urlContent);
-        }
-      } else {
-        // This should be the case only when resource isn't in a JAR file during development
-        try {
-          File contentFile = new File(urlContent.getURL().toURI());
-          File parentFile = new File(contentFile.getParent());
-          File [] siblingFiles = parentFile.listFiles();
-          // Write in home stream each file that is stored in the same directory
-          for (File siblingFile : siblingFiles) {
-            if (!siblingFile.isDirectory()) {
-              writeZipEntry(zipOut, entryNameOrDirectory + "/" + siblingFile.getName(),
-                  new URLContent(siblingFile.toURI().toURL()));
-            }
-          }
-        } catch (URISyntaxException ex) {
-          IOException ex2 = new IOException();
-          ex2.initCause(ex);
-          throw ex2;
-        }
-      }
-    } else {
-      writeZipEntry(zipOut, entryNameOrDirectory, urlContent);
-    }
-  }
-
-  /**
-   * Writes in <code>zipOut</code> stream one or more entries matching the content
-   * <code>urlContent</code> coming from a home file.
-   */
-  private void writeHomeZipEntries(ZipOutputStream zipOut,
-                                   String entryNameOrDirectory,
-                                   HomeURLContent urlContent) throws IOException {
-    String entryName = urlContent.getJAREntryName();
-    int slashIndex = entryName.indexOf('/');
-    // If content comes from a directory of a home file
-    if (slashIndex > 0) {
-      URL zipUrl = urlContent.getJAREntryURL();
-      String entryDirectory = entryName.substring(0, slashIndex + 1);
-      // Write in home stream each zipped stream entry that is stored in the same directory
-      for (ContentDigestManager.ZipEntryData zipEntry : ContentDigestManager.getInstance().getZipURLEntries(urlContent)) {
-        String zipEntryName = zipEntry.getName();
-        if (zipEntryName.startsWith(entryDirectory)) {
-          Content siblingContent = new URLContent(new URL("jar:" + zipUrl + "!/"
-              + URLEncoder.encode(zipEntryName, "UTF-8").replace("+", "%20")));
-          writeZipEntry(zipOut, entryNameOrDirectory + zipEntryName.substring(slashIndex), siblingContent);
-        }
-      }
-    } else {
-      writeZipEntry(zipOut, entryNameOrDirectory, urlContent);
-    }
-  }
-
-  /**
-   * Writes in <code>zipOut</code> stream all the sibling files of the zipped
-   * <code>urlContent</code>.
-   */
-  private void writeZipEntries(ZipOutputStream zipOut,
-                               String directory,
-                               URLContent urlContent) throws IOException {
-    // Write in alphabetic order each zipped stream entry in home stream
-    for (ContentDigestManager.ZipEntryData zipEntry : ContentDigestManager.getInstance().getZipURLEntries(urlContent)) {
-      String zipEntryName = zipEntry.getName();
-      Content siblingContent = new URLContent(new URL("jar:" + urlContent.getJAREntryURL() + "!/"
-          + URLEncoder.encode(zipEntryName, "UTF-8").replace("+", "%20")));
-      writeZipEntry(zipOut, directory + "/" + zipEntryName, siblingContent);
-    }
-  }
-
-  /**
-   * Writes in <code>zipOut</code> stream a new entry named <code>entryName</code> that
-   * contains a given <code>content</code>.
-   */
-  private void writeZipEntry(ZipOutputStream zipOut, String entryName, Content content) throws IOException {
-    checkCurrentThreadIsntInterrupted();
-    byte [] buffer = new byte [8192];
-    InputStream contentIn = null;
-    try {
-      zipOut.putNextEntry(new ZipEntry(entryName));
-      contentIn = content.openStream();
-      int size;
-      while ((size = contentIn.read(buffer)) != -1) {
-        zipOut.write(buffer, 0, size);
-      }
-      zipOut.closeEntry();
-    } finally {
-      if (contentIn != null) {
-        contentIn.close();
-      }
-    }
-  }
-
-  /**
    * A dummy <code>ObjectOutputStream</code> that keeps track of the <code>Content</code>
    * objects of a home that should be saved.
    */
@@ -363,10 +230,18 @@ public class DefaultHomeOutputStream extends FilterOutputStream {
       if (obj instanceof TemporaryURLContent
           || obj instanceof HomeURLContent
           || obj instanceof SimpleURLContent
-          || (contentRecording == ContentRecording.INCLUDE_ALL_CONTENT && obj instanceof Content)) {
+          || ((contentRecording == ContentRecording.INCLUDE_ALL_CONTENT
+                || contentRecording == ContentRecording.INCLUDE_NO_EXTERNAL_CONTENT)
+              && obj instanceof Content)) {
         String subEntryName = "";
         if (obj instanceof URLContent) {
           URLContent urlContent = (URLContent)obj;
+          if (contentRecording == ContentRecording.INCLUDE_NO_EXTERNAL_CONTENT
+              && (urlContent.isJAREntry() && !"file".equals(urlContent.getJAREntryURL().getProtocol())
+                  || !urlContent.isJAREntry() && !"file".equals(urlContent.getURL().getProtocol()))) {
+            // External content uses URLs which are not in local file system
+            return obj;
+          }
           // Check if duplicated content can be avoided
           ContentDigestManager contentDigestManager = ContentDigestManager.getInstance();
           for (Map.Entry<Content, String> contentEntry : this.savedContentNames.entrySet()) {

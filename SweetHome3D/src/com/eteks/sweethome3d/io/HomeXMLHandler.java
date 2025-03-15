@@ -73,6 +73,7 @@ import com.eteks.sweethome3d.model.Transformation;
 import com.eteks.sweethome3d.model.UserPreferences;
 import com.eteks.sweethome3d.model.Wall;
 import com.eteks.sweethome3d.tools.ResourceURLContent;
+import com.eteks.sweethome3d.tools.SimpleURLContent;
 import com.eteks.sweethome3d.tools.URLContent;
 
 /**
@@ -1930,7 +1931,13 @@ public class HomeXMLHandler extends DefaultHandler {
     String contentFile = attributes.get(attributeName);
     if (contentFile != null) {
       try {
-        return new URLContent(new URL(contentFile));
+        URL url = new URL(contentFile);
+        if (contentFile.startsWith("jar:") && "texture".equals(elementName) && "image".equals(attributeName)) {
+          // Ensure texture images within a file will be saved without the remaining content
+          return new SimpleURLContent(url);
+        } else {
+          return new URLContent(url);
+        }
       } catch (MalformedURLException ex1) {
         if (this.contentContext != null) {
           try {

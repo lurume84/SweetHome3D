@@ -151,7 +151,7 @@ public class HomeAppletController extends HomePluginController {
   @Override
   public void save() {
     if (this.home.getName() != null) {
-      chekHomeLengthAndSave(new Runnable() {
+      checkHomeLengthAndSave(new Runnable() {
           public void run() {
             HomeAppletController.super.save();
           }
@@ -168,7 +168,7 @@ public class HomeAppletController extends HomePluginController {
   @Override
   protected void saveAs(final HomeRecorder.Type recorderType, 
                         final Runnable postSaveTask) {
-    chekHomeLengthAndSave(new Runnable() {
+    checkHomeLengthAndSave(new Runnable() {
         public void run() {
           String homeName = importedHomeNames.get(home);
           if (homeName != null) {
@@ -194,7 +194,7 @@ public class HomeAppletController extends HomePluginController {
   /**
    * Checks the length of data and executes <code>saveTask</code> if length is ok. 
    */
-  private void chekHomeLengthAndSave(final Runnable saveTask) {
+  private void checkHomeLengthAndSave(final Runnable saveTask) {
     if (this.homeMaximumLength > 0) {
       // Check home length in a threaded task
       Callable<Void> exportToObjTask = new Callable<Void>() {
