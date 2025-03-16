@@ -199,7 +199,7 @@ DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
                 if (recorder.simpleContentNames [content.getURL()] !== undefined) {
                   onlineContentNames [content.getURL()] = recorder.simpleContentNames [content.getURL()];
                   localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
-                } else if (content instanceof SimpleURLContent) {
+                } else {
                   // Save SimpleURLContent (always a temporary jar content)
                   content.getStreamURL({
                       content: content,
@@ -251,7 +251,7 @@ DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
                     });
                 }
               } else {
-	            localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
+                localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
               }
            
               if (localContentsCopy.length === 0) {
