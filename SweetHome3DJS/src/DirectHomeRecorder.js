@@ -195,63 +195,63 @@ DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
                 }
               }
 
-              if (content instanceof SimpleURLContent 
-                  && recorder.simpleContentNames [content.getURL()] !== undefined) {
-                onlineContentNames [content.getURL()] = recorder.simpleContentNames [content.getURL()];
-              } 
-              
-              if (onlineContentNames [content.getURL()] !== undefined) {
-                localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
-              } else if (content instanceof SimpleURLContent) {
-                // Save SimpleURLContent (always a temporary jar content)
-                content.getStreamURL({
-                    content: content,
-                    urlReady: function(url) {
-                      var entrySeparatorIndex = url.indexOf("!/");
-                      var contentEntryName = decodeURIComponent(url.substring(entrySeparatorIndex + 2));
-                      var jarUrl = url.substring(4, entrySeparatorIndex);
-                      ZIPTools.getZIP(jarUrl, false, {
-                          content: this.content,
-                          zipReady : function(zip) {
-                            try {
-                              var contentEntry = zip.file(contentEntryName);
-                              if (contentEntry == null) {
-                                contentEntry = zip.file("/" + contentEntryName);
-                              }
-                              var entryData = contentEntry.asUint8Array();
-                              var contentFileName = UUID.randomUUID() + ".dat";
-                              var observer = {
-                                  handledContent: this.content,
-                                  blobSaved: function(content, contentFileName) {
-                                    var savedContent = URLContent.fromURL(
-                                        CoreTools.format(recorder.configuration.readResourceURL.replace(/(%[^s])/g, "%$1"), encodeURIComponent(contentFileName)));
-                                    onlineContentNames [this.handledContent.getURL()] = 
-                                    recorder.simpleContentNames [this.handledContent.getURL()] = savedContent.getURL();
-                                    localContentsCopy.splice(localContentsCopy.lastIndexOf(this.handledContent), 1);
-                                    if (localContentsCopy.length === 0) {
-                                      saveContentsAndWriteHome();
+              if (content instanceof SimpleURLContent) {
+                if (recorder.simpleContentNames [content.getURL()] !== undefined) {
+                  onlineContentNames [content.getURL()] = recorder.simpleContentNames [content.getURL()];
+                  localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
+                } else if (content instanceof SimpleURLContent) {
+                  // Save SimpleURLContent (always a temporary jar content)
+                  content.getStreamURL({
+                      content: content,
+                      urlReady: function(url) {
+                        var entrySeparatorIndex = url.indexOf("!/");
+                        var contentEntryName = decodeURIComponent(url.substring(entrySeparatorIndex + 2));
+                        var jarUrl = url.substring(4, entrySeparatorIndex);
+                        ZIPTools.getZIP(jarUrl, false, {
+                            content: this.content,
+                            zipReady : function(zip) {
+                              try {
+                                var contentEntry = zip.file(contentEntryName);
+                                if (contentEntry == null) {
+                                  contentEntry = zip.file("/" + contentEntryName);
+                                }
+                                var entryData = contentEntry.asUint8Array();
+                                var contentFileName = UUID.randomUUID() + ".dat";
+                                var observer = {
+                                    handledContent: this.content,
+                                    blobSaved: function(content, contentFileName) {
+                                      var savedContent = URLContent.fromURL(
+                                          CoreTools.format(recorder.configuration.readResourceURL.replace(/(%[^s])/g, "%$1"), encodeURIComponent(contentFileName)));
+                                      onlineContentNames [this.handledContent.getURL()] = 
+                                      recorder.simpleContentNames [this.handledContent.getURL()] = savedContent.getURL();
+                                      localContentsCopy.splice(localContentsCopy.lastIndexOf(this.handledContent), 1);
+                                      if (localContentsCopy.length === 0) {
+                                        saveContentsAndWriteHome();
+                                      }
+                                    },
+                                    blobError: function(status, error) {
+                                      observer.homeError(status, error);
                                     }
-                                  },
-                                  blobError: function(status, error) {
-                                    observer.homeError(status, error);
-                                  }
-                                };
-
-                              abortableOperations.push(BlobURLContent.fromBlob(new Blob([entryData])).
-                                  writeBlob(recorder.configuration.writeResourceURL, contentFileName, observer));
-                            } catch (ex) {
+                                  };
+  
+                                abortableOperations.push(BlobURLContent.fromBlob(new Blob([entryData])).
+                                    writeBlob(recorder.configuration.writeResourceURL, contentFileName, observer));
+                              } catch (ex) {
+                                observer.homeError(ex, ex.message);
+                              }
+                            },
+                            zipError : function(error) {
                               observer.homeError(ex, ex.message);
                             }
-                          },
-                          zipError : function(error) {
-                            observer.homeError(ex, ex.message);
-                          }
-                        });
-                    },
-                    urlError: function(status, error) {
-                      observer.homeError(ex, ex.message);
-                    }    
-                  });
+                          });
+                      },
+                      urlError: function(status, error) {
+                        observer.homeError(ex, ex.message);
+                      }    
+                    });
+                }
+              } else {
+	            localContentsCopy.splice(localContentsCopy.lastIndexOf(content), 1);
               }
            
               if (localContentsCopy.length === 0) {
