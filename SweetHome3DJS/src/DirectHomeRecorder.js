@@ -33,7 +33,11 @@
  *          listHomesURL: string,
  *          deleteHomeURL: string,
  *          compressionLevel: number,
- *          writeHomeWithWorker: boolean
+ *          writeHomeWithWorker: boolean,
+ *          onlineFurnitureCatalogURLs: string[],
+ *          onlineFurnitureResourcesURLBase: string,
+ *          onlineTexturesCatalogURLs: string[],
+ *          onlineTexturesResourcesURLBase: string
  *         }} [configuration] the recorder configuration
  * @author Emmanuel Puybaret
  */
