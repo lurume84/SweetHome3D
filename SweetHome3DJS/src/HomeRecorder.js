@@ -488,10 +488,12 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                              && slashIndex > 0)
                           || !(homeContent instanceof HomeURLContent
                                || homeContent instanceof SimpleURLContent)) {
+                        var contentZipOut = new JSZip();
                         var contentObserver = {
-                            blobContentEntryName: contentEntryName.substring(homeContent instanceof HomeURLContent ? slashIndex + 1 : 0),
+	                        contentZipOut: contentZipOut,
+                            blobContentEntryName: homeContent instanceof HomeURLContent ? contentEntryName.substring(slashIndex + 1) : contentEntryName,
                             contentSaved: function(homeContent) {
-                              writeBlob(homeContent, recorder.generateZip(contentZipOut, compressionLevel, "blob"), 
+                              writeBlob(homeContent, recorder.generateZip(this.contentZipOut, compressionLevel, "blob"), 
                                   this.blobContentEntryName);
                             }, 
                             contentError: function(status, error) {
@@ -499,7 +501,6 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                               replaceContentsStoredInCache();
                             }
                           }; 
-                        var contentZipOut = new JSZip();
                         if (homeContent instanceof HomeURLContent) {
                           recorder.writeHomeZipEntries(contentZipOut, "", homeContent, contentObserver);
                         } else {
