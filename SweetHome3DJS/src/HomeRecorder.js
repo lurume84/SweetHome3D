@@ -32,7 +32,8 @@
  *          compressionLevel: number,
  *          includeAllContent: boolean,
  *          writeDataType: string,
- *          writeHomeWithWorker: boolean 
+ *          writeHomeWithWorker: boolean, 
+ *          ignorePermanentData: boolean
  *         }} [configuration] the recorder configuration
  * @author Emmanuel Puybaret
  */
@@ -70,7 +71,11 @@ HomeRecorder.prototype.readHome = function(url, observer) {
             // An observer which will replace home contents by permanent content or content in cache if it exists
             var contentObserver = {
                 homeLoaded: function(home) {
-                  recorder.replaceHomeContents(home, url, observer);
+	              if (recorder.configuration.ignorePermanentData) {
+		            observer.homeLoaded(home);
+	              } else {
+                    recorder.replaceHomeContents(home, url, observer);
+                  }
                 }, 
                 homeError: function(error) {
                   if (observer.homeError !== undefined) {
@@ -375,8 +380,15 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                            || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0) {
                         if (replacingContent instanceof LocalURLContent) {
                           replacingContent.setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
+                          if (content.isJAREntry() 
+	                          && !replacingContent.isJAREntry()) {
+	                        replacingContent = URLContent.fromURL("jar:" + replacingContent.getURL() + "!/" + content.getJAREntryName());
+	                      }
                         } else if (replacingContent.isJAREntry() && URLContent.fromURL(replacingContent.getJAREntryURL()) instanceof LocalURLContent) {
                           URLContent.fromURL(replacingContent.getJAREntryURL()).setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
+                        }
+                        if (content.isJAREntry()) {
+                          ZIPTools.disposeZIP(content.getJAREntryURL());
                         }
                       } 
                     }
@@ -388,17 +400,9 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                             || content instanceof SimpleURLContent 
                             || !content.isJAREntry() && content.getURL().indexOf("http") === 0
                             || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0)
-                        && contentDigestManager.getPermanentContentDigest(content) != null;
+                        && contentDigestManager.getPermanentContentDigest(content) != null; 
                   }, 
                   getReplacingContent);
-              var disposeZips = function() {
-                  ZIPTools.disposeZIP(homeUrl);
-                  for (var i = homeContents.length - 1; i >= 0; i--) {
-                     if (homeContents[i].isJAREntry() && content.getURL().indexOf("http") === 0) {
-                       ZIPTools.disposeZIP(homeContents[i].getJAREntryURL());
-                     }
-                   }
-                 };
  
               var remainingHomeContentCount = homeContents.length - permanentContents.length;
               if (remainingHomeContentCount > 0
@@ -411,12 +415,15 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                   
                 var replaceContentsStoredInCache = function() {
                     if (--remainingHomeContentCount === 0) {
-                      disposeZips();
+                      ZIPTools.disposeZIP(homeUrl);
                       recorder.searchContents(home, [], permanentContents, 
                           function(content) {
                             return remainingHomeContents[content.getURL()] !== undefined;
                            }, 
                            function(content) {
+                             if (content.isJAREntry() && content.getURL().indexOf("http") === 0) {
+                               ZIPTools.disposeZIP(content.getJAREntryURL());
+                             }
                              return remainingHomeContents[content.getURL()];
                            });
                       observer.homeLoaded(home);    
@@ -563,7 +570,7 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                   }
                 }
               } else {
-               disposeZips();
+               ZIPTools.disposeZIP(homeUrl);
                observer.homeLoaded(home);
               }
             }
