@@ -71,9 +71,9 @@ HomeRecorder.prototype.readHome = function(url, observer) {
             // An observer which will replace home contents by permanent content or content in cache if it exists
             var contentObserver = {
                 homeLoaded: function(home) {
-	              if (recorder.configuration.ignorePermanentData) {
-		            observer.homeLoaded(home);
-	              } else {
+                  if (recorder.configuration.ignorePermanentData) {
+                    observer.homeLoaded(home);
+                  } else {
                     recorder.replaceHomeContents(home, url, observer);
                   }
                 }, 
@@ -381,9 +381,9 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                         if (replacingContent instanceof LocalURLContent) {
                           replacingContent.setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
                           if (content.isJAREntry() 
-	                          && !replacingContent.isJAREntry()) {
-	                        replacingContent = URLContent.fromURL("jar:" + replacingContent.getURL() + "!/" + content.getJAREntryName());
-	                      }
+                              && !replacingContent.isJAREntry()) {
+                            replacingContent = URLContent.fromURL("jar:" + replacingContent.getURL() + "!/" + content.getJAREntryName());
+                          }
                         } else if (replacingContent.isJAREntry() && URLContent.fromURL(replacingContent.getJAREntryURL()) instanceof LocalURLContent) {
                           URLContent.fromURL(replacingContent.getJAREntryURL()).setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
                         }
@@ -497,7 +497,7 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                                || homeContent instanceof SimpleURLContent)) {
                         var contentZipOut = new JSZip();
                         var contentObserver = {
-	                        contentZipOut: contentZipOut,
+                            contentZipOut: contentZipOut,
                             blobContentEntryName: homeContent instanceof HomeURLContent ? contentEntryName.substring(slashIndex + 1) : contentEntryName,
                             contentSaved: function(homeContent) {
                               writeBlob(homeContent, recorder.generateZip(this.contentZipOut, compressionLevel, "blob"), 
