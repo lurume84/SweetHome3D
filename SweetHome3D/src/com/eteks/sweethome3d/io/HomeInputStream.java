@@ -1,5 +1,5 @@
 /*
- * DefaultHomeInputStream.java 3 feb 2025
+ * HomeInputStream.java 3 feb 2025
  *
  * Sweet Home 3D, Copyright (c) 2025 Space Mushrooms <info@sweethome3d.com>
  *
