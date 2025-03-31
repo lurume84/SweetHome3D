@@ -552,6 +552,7 @@ DirectHomeRecorder.prototype.getAvailableHomes = function(observer) {
       var request = new XMLHttpRequest();
       var querySeparator = url.indexOf('?') != -1 ? '&' : '?';
       request.open("GET", url + querySeparator + "requestId=" + UUID.randomUUID(), true); 
+      request.withCredentials = true;
       request.addEventListener("load", function(ev) {
           if (request.readyState === XMLHttpRequest.DONE
               && request.status === 200) {
@@ -668,7 +669,8 @@ DirectHomeRecorder.prototype.deleteHome = function(homeName, observer) {
         url += "&requestId=" + UUID.randomUUID();
       }
       var request = new XMLHttpRequest();
-      request.open("GET", url, true); 
+      request.open("GET", url, true);
+      request.withCredentials = true; 
       request.addEventListener("load", function(ev) {
           if (request.readyState === XMLHttpRequest.DONE
               && request.status === 200) {

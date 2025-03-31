@@ -298,7 +298,8 @@ HomeRecorder.prototype.replaceHomeContents = function(home, homeUrl, observer) {
     } else {
       var request = new XMLHttpRequest();
       var querySeparator = url.indexOf('?') != -1 ? '&' : '?';
-      request.open("GET", url + querySeparator + "requestId=" + UUID.randomUUID(), true); 
+      request.open("GET", url + querySeparator + "requestId=" + UUID.randomUUID(), true);
+      request.withCredentials = true;
       request.addEventListener("load", function(ev) {
           if (request.readyState === XMLHttpRequest.DONE
               && request.status === 200) {

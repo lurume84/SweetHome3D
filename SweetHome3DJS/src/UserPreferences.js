@@ -1632,6 +1632,7 @@ RecordedUserPreferences.prototype.readPreferences = function(properties, default
       var request = new XMLHttpRequest();
       var querySeparator = this.readPreferencesUrl.indexOf('?') != -1 ? '&' : '?';
       request.open("GET", this.readPreferencesUrl + querySeparator + "requestId=" + UUID.randomUUID(), true); 
+      request.withCredentials = true;
       request.addEventListener("load", function() {
           if (request.readyState === XMLHttpRequest.DONE
               && request.status === 200) {
@@ -1928,6 +1929,7 @@ RecordedUserPreferences.prototype.writePreferences = function(properties) {
         var request = new XMLHttpRequest();
         var querySeparator = this.writePreferencesUrl.indexOf('?') != -1 ? '&' : '?';
         request.open("POST", this.writePreferencesUrl + querySeparator + "updateId=" + UUID.randomUUID(), true);
+        request.withCredentials = true;
         request.addEventListener('load', function (ev) {
             if (request.readyState === XMLHttpRequest.DONE) {
               if (request.status === 200) {

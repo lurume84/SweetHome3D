@@ -408,6 +408,7 @@ LocalURLContent.prototype.writeBlob = function(writeBlobUrl, blobName, observer)
         } else {
           var request = new XMLHttpRequest();
           request.open("POST", url, true);
+          request.withCredentials = true;
           request.addEventListener('load', function (ev) {
               if (request.readyState === XMLHttpRequest.DONE) {
                 if (request.status === 200) {

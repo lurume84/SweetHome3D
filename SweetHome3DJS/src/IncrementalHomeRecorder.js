@@ -112,6 +112,7 @@ IncrementalHomeRecorder.prototype.checkServer = function(pingDelay) {
   var request = new XMLHttpRequest();
   var pingUrl = this.configuration["pingURL"];
   request.open("GET", pingUrl, true);
+  request.withCredentials = true;
   request.addEventListener("load", function(ev) {
       if (request.readyState === XMLHttpRequest.DONE
           && request.status === 200) {
@@ -318,6 +319,7 @@ IncrementalHomeRecorder.prototype.removeHome = function(home) {
       try {
         var request = new XMLHttpRequest();
         request.open("GET", closeHomeURL, true); // Asynchronous call required during unload
+        request.withCredentials = true;
         request.send();
       } catch (ex) {
         console.log(ex); 
@@ -350,6 +352,7 @@ IncrementalHomeRecorder.prototype.saveBlobs = function(savedObject, serverErrorH
       var uploadUrl = CoreTools.format(writeResourceURL.replace(/(%[^s])/g, "%$1"), encodeURIComponent(savedObject.resourceFileName));
       var request = new XMLHttpRequest();
       request.open("POST", uploadUrl, true);
+      request.withCredentials = true;
       request.addEventListener("load", function(ev) {
           if (request.readyState === XMLHttpRequest.DONE) {
             if (request.status === 200) {

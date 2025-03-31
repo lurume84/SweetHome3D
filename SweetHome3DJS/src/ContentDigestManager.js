@@ -201,6 +201,7 @@ ContentDigestManager.prototype.getURLContentDigest = function(content, digestObs
       urlReady: function(url) {
         var request = new XMLHttpRequest();
         request.open("GET", url, true);
+        request.withCredentials = true;
         request.responseType = "arraybuffer";
         request.addEventListener("load", function() {
             manager.computeContentDigest(request.response, function(digest) {
