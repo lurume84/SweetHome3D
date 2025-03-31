@@ -200,7 +200,7 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
       
       if (textureImage.transparent === undefined) {
         var request = new XMLHttpRequest();
-        request.open("GET", url, synchronous || url.indexOf("app://") >= 0); // Always synchronized under Cordova / iOS
+        request.open("GET", url, !synchronous);
         request.withCredentials = true;
         request.addEventListener("load", function() {
             if (request.readyState === XMLHttpRequest.DONE 
@@ -253,7 +253,7 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
     textureImage.addEventListener("error", imageErrorListener);
     if (this.scriptServer === undefined) {
       var scriptFolder = ZIPTools.getScriptFolder();
-      var folderIndex = scriptFolder.indexOf('/', scriptFolder.indexOf("://") + 1);
+      var folderIndex = scriptFolder.indexOf('/', scriptFolder.indexOf("://") + 3);
       this.scriptServer = folderIndex < 0 ? scriptFolder : scriptFolder.substring(0, folderIndex); 
     }
     if (url.indexOf(this.scriptServer) === 0
@@ -268,7 +268,7 @@ TextureManager.prototype.load = function(url, synchronous, loadingTextureObserve
       // If image is hosted on a server different from application's one
       // download with XHR to ensure credentials are set and avoid CORS issue
       var request = new XMLHttpRequest();
-      request.open("GET", url, synchronous);
+      request.open("GET", url, !synchronous);
       request.responseType = "blob";
       request.withCredentials = true;
       request.addEventListener("load", function() {
