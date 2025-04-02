@@ -69,6 +69,7 @@ public class PackageDependenciesTest extends TestCase {
     JavaPackage swingFilechooser = constraint.addPackage("javax.swing.filechooser");
     JavaPackage swingPlaf = constraint.addPackage("javax.swing.plaf");
     JavaPackage swingPlafSynth = constraint.addPackage("javax.swing.plaf.synth");
+    // ImageIO
     JavaPackage imageio = constraint.addPackage("javax.imageio");
     JavaPackage imageioStream = constraint.addPackage("javax.imageio.stream");
     // Java 3D
@@ -207,6 +208,8 @@ public class PackageDependenciesTest extends TestCase {
     sweetHome3DIO.dependsUpon(xmlParsers);
     sweetHome3DIO.dependsUpon(xmlSax);
     sweetHome3DIO.dependsUpon(xmlSaxHelpers);
+    sweetHome3DIO.dependsUpon(imageio);
+    sweetHome3DIO.dependsUpon(imageioStream);
 
     // Describe application and applet assembly packages
     sweetHome3DApplication.dependsUpon(sweetHome3DModel);
