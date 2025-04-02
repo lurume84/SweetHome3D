@@ -560,6 +560,12 @@ DirectRecordingHomeController.prototype.confirmDeleteHome = function(homeName, c
  *          includeAllContent: boolean,
  *          writeDataType: string,
  *          writeHomeWithWorker: boolean, 
+ *          ignorePermanentData: boolean,
+ *          onlineResourcesURLBase: string,
+ *          onlineFurnitureCatalogURLs: string[],
+ *          onlineFurnitureResourcesURLBase: string,
+ *          onlineTexturesCatalogURLs: string[],
+ *          onlineTexturesResourcesURLBase: string, 
  *          defaultHomeName: string,
  *          writingObserver: {writeStarted: Function, 
  *                            writeSucceeded: Function, 
@@ -709,7 +715,8 @@ function AutoRecoveryManager(application) {
         writeResourceURL: manager.autoRecoveryDatabaseUrlBase + "?keyPathField=name&contentField=content&dateField=date&name=%s", 
         listHomesURL: manager.autoRecoveryDatabaseUrlBase + "?name=(.*).recovered",
         deleteHomeURL: manager.autoRecoveryDatabaseUrlBase + "?name=%s.recovered",
-        writeHomeWithWorker: true
+        writeHomeWithWorker: true,
+        onlineResourcesURLBase: application.configuration.onlineResourcesURLBase
       });
   }
   AutoRecoveryRecorder.prototype = Object.create(DirectHomeRecorder.prototype);

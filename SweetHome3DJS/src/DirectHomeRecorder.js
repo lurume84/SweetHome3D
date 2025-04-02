@@ -32,8 +32,15 @@
  *          readResourceURL: string,
  *          listHomesURL: string,
  *          deleteHomeURL: string,
+ *          writeCacheResourceURL: string,
+ *          readCacheResourceURL: string,
+ *          listCacheResourcesURL: string,
  *          compressionLevel: number,
- *          writeHomeWithWorker: boolean,
+ *          includeAllContent: boolean,
+ *          writeDataType: string,
+ *          writeHomeWithWorker: boolean, 
+ *          ignorePermanentData: boolean,
+ *          onlineResourcesURLBase: string,
  *          onlineFurnitureCatalogURLs: string[],
  *          onlineFurnitureResourcesURLBase: string,
  *          onlineTexturesCatalogURLs: string[],
@@ -166,7 +173,8 @@ DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
       }
     };
 
-  if (this.configuration.onlineFurnitureCatalogURLs !== undefined
+  if (this.configuration.onlineResourcesURLBase !== undefined
+	  && this.configuration.onlineFurnitureCatalogURLs !== undefined
       && this.configuration.onlineTexturesCatalogURLs !== undefined) {
     // Retrieve onlineContents
     if (this.onlineContents == null) {
@@ -180,8 +188,7 @@ DirectHomeRecorder.prototype.writeHome = function(home, homeName, observer) {
     // Check if duplicated content can be avoided among local content
     var localContents = [];
     this.searchContents(home, [], localContents, function(content) {
-        return !(content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0
-                 || !content.isJAREntry() && content.getURL().indexOf("http") === 0);
+        return content.getURL().indexOf(recorder.configuration.onlineResourcesURLBase) <= 0;
       });
     var contentDigestManager = ContentDigestManager.getInstance();
     if (localContents.length > 0) {

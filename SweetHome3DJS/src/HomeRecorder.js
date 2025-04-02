@@ -33,7 +33,8 @@
  *          includeAllContent: boolean,
  *          writeDataType: string,
  *          writeHomeWithWorker: boolean, 
- *          ignorePermanentData: boolean
+ *          ignorePermanentData: boolean,
+ *          onlineResourcesURLBase: string
  *         }} [configuration] the recorder configuration
  * @author Emmanuel Puybaret
  */
@@ -343,16 +344,16 @@ HomeRecorder.prototype.replaceHomeContents = function(home, homeUrl, observer) {
  * @private
  */
 HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, observer) {
-  var homeContents = [];
+  var recorder = this;
+  var homeContents = [];  
   this.searchContents(home, [], homeContents, function(content) {
       return content instanceof HomeURLContent
           || content instanceof SimpleURLContent
-          || !content.isJAREntry() && content.getURL().indexOf("http") === 0
-          || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0;
+          || recorder.configuration.onlineResourcesURLBase !== undefined 
+              && content.getURL().indexOf(recorder.configuration.onlineResourcesURLBase) >= 0;
     });
   // Compute digest for home contents
   if (homeContents.length > 0) {
-    var recorder = this;
     var homeContentsCopy = homeContents.slice(0).reverse();
     var contentDigestManager = ContentDigestManager.getInstance();
     for (var i = homeContentsCopy.length - 1; i >= 0; i--) {
@@ -377,8 +378,8 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                             + content.getJAREntryName().substring(content.getJAREntryName().indexOf('/') + 1));
                       }
                                   
-                      if (!content.isJAREntry() && content.getURL().indexOf("http") === 0
-                           || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0) {
+                      if (recorder.configuration.onlineResourcesURLBase !== undefined 
+                          && content.getURL().indexOf(recorder.configuration.onlineResourcesURLBase) >= 0) {
                         if (replacingContent instanceof LocalURLContent) {
                           replacingContent.setSavedContent(content.isJAREntry() ? URLContent.fromURL(content.getJAREntryURL()) : content);
                           if (content.isJAREntry() 
@@ -399,8 +400,8 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                   function(content) {
                     return (content instanceof HomeURLContent
                             || content instanceof SimpleURLContent 
-                            || !content.isJAREntry() && content.getURL().indexOf("http") === 0
-                            || content.isJAREntry() && content.getJAREntryURL().indexOf("http") === 0)
+                            || recorder.configuration.onlineResourcesURLBase !== undefined 
+                                && content.getURL().indexOf(recorder.configuration.onlineResourcesURLBase) >= 0)
                         && contentDigestManager.getPermanentContentDigest(content) != null; 
                   }, 
                   getReplacingContent);
@@ -422,7 +423,9 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                             return remainingHomeContents[content.getURL()] !== undefined;
                            }, 
                            function(content) {
-                             if (content.isJAREntry() && content.getURL().indexOf("http") === 0) {
+                             if (recorder.configuration.onlineResourcesURLBase !== undefined
+                                 && content.isJAREntry() 
+                                 && content.getJAREntryURL().indexOf(recorder.configuration.onlineResourcesURLBase) === 0) {
                                ZIPTools.disposeZIP(content.getJAREntryURL());
                              }
                              return remainingHomeContents[content.getURL()];
@@ -449,8 +452,8 @@ HomeRecorder.prototype.replaceOrExtractHomeContents = function(home, homeUrl, ob
                                   var cacheContent = URLContent.fromURL(url);
                                   // Store content in cache for future use (digest already known since it's an extract of the file)
                                   contentDigestManager.setContentDigest(cacheContent, digest);
-                                  if ((!homeContent.isJAREntry() && homeContent.getURL().indexOf("http") === 0
-                                          || homeContent.isJAREntry() && homeContent.getJAREntryURL().indexOf("http") === 0)
+                                  if (recorder.configuration.onlineResourcesURLBase !== undefined 
+                                      && homeContent.getURL().indexOf(recorder.configuration.onlineResourcesURLBase) >= 0
                                       && !(homeContent instanceof SimpleURLContent)) {
                                     cacheContent.setSavedContent(homeContent.isJAREntry() 
                                          ? URLContent.fromURL(homeContent.getJAREntryURL()) 
