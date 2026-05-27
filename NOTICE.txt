@@ -1,0 +1,15 @@
+This project is based on Sweet Home 3D.
+
+Sweet Home 3D
+Copyright (C) 2005-2024 Emmanuel Puybaret / Space Mushrooms <info@sweethome3d.com>
+
+This software is distributed under the terms of the GNU General Public
+License version 2 (GPL v2). See LICENSE for the full license text.
+
+Original project:       https://www.sweethome3d.com
+Original SVN repository: https://sourceforge.net/projects/sweethome3d/
+Mirrored from SVN revision r9047.
+
+Third-party libraries included in this project may be subject to their own
+licenses. See THIRDPARTY-LICENSE-*.TXT files in the SweetHome3D/ directory
+for details.
